@@ -298,7 +298,7 @@ class ImagesBatch(BaseImagesBatch):
         fmt : str
             Format of an image.
         """
-        return PIL.Image.open(self._make_path(ix, src))
+        return PIL.Image.open(self._get_file_name(ix, src))
 
     @inbatch_parallel(init='indices')
     def _dump_image(self, ix, src='images', dst=None, fmt=None):

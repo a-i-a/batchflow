@@ -631,8 +631,10 @@ class Batch:
 
             else:
                 raise ValueError("Src must be either str, FilesIndex or None")
-
             return file_name
+
+        elif isinstance(src, str):
+            return os.path.join(src, str(ix))
         else:
             raise ValueError("File locations must be specified to dump/load data")
 
