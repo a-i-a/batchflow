@@ -23,3 +23,4 @@ from .encoder_decoder import EncoderDecoder
 from .pyramidnet import PyramidNet, PyramidNet18, PyramidNet34, PyramidNet50, PyramidNet101, PyramidNet152
 from .tf_sampler import TfSampler
 from .deep_galerkin import DeepGalerkin
+from .deep_galerkin import SystemDeepGalerkin

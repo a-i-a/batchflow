@@ -408,3 +408,344 @@ class DeepGalerkin(TFModel):
         """
         fetches = 'solution' if fetches is None else fetches
         return super().predict(fetches, feed_dict, **kwargs)
+
+
+
+class SystemDeepGalerkin(TFModel):
+    """ Deep Galerkin modification for solving systems of equations.
+    """
+    @classmethod
+    def default_config(cls):
+        """ Overloads :meth:`.TFModel.default_config`. """
+        config = super().default_config()
+        config['ansatz'] = {}
+        config['common/time_multiplier'] = 'sigmoid'
+        config['common/bind_bc_ic'] = True
+        return config
+
+    def build_config(self, names=None):
+        """ Overloads :meth:`.TFModel.build_config`.
+        PDE-problem is fetched from 'pde' key in 'self.config', and then
+        is passed to 'common' so that all of the subsequent blocks get it as 'kwargs'.
+        """
+        pde = self.config.get('pde')
+        if pde is None:
+            raise ValueError("The PDE-problem is not specified. Use 'pde' config to set up the problem.")
+
+        # get dimensionality
+        form = pde.get("form")
+        if form is None:
+            raise ValueError("Left-hand side is not specified. Use 'pde/form' config to set it up.")
+
+        try:
+            d0_coeffs = form.get('d0', None)
+            d1_coeffs = form.get('d1', None)
+            d2_coeffs = form.get('d2', None)
+
+            if (d1_coeffs is not None) and (d2_coeffs is not None):
+                if ((d1_coeffs.shape)[0] == (d2_coeffs.shape)[0]) and ((d1_coeffs.shape)[-1] == (d2_coeffs.shape)[-1]):
+                    m_eqns = (d1_coeffs.shape)[0]
+                    n_dims = (d1_coeffs.shape)[-1]
+                else:
+                    raise ValueError("Dimensions of d1 and d2 are mismatched.")
+            elif (d1_coeffs is None) and (d2_coeffs is not None):
+                m_eqns = (d2_coeffs.shape)[0]
+                n_dims = (d2_coeffs.shape)[-1]
+            elif (d1_coeffs is not None) and (d2_coeffs is None):
+                m_eqns = (d1_coeffs.shape)[0]
+                n_dims = (d1_coeffs.shape)[-1]
+            else:
+                raise ValueError("Left-hand side should contain at least one derivative.")
+
+            if d0_coeffs is not None:
+                if (d0_coeffs.shape)[0] != m_eqns:
+                    raise ValueError("d0 should be of shape (%s, %s)." %(m_eqns, m_eqns))
+        except AttributeError:
+            raise TypeError("Each specified form should be an np.array.")
+
+        self.config.update({'pde/m_eqns': m_eqns,
+                            'pde/n_dims': n_dims,
+                            'initial_block/inputs': 'points',
+                            'inputs': dict(points={'shape': (n_dims, )})})
+
+        # default values for domain
+        if pde.get('domain') is None:
+            self.config.update({'pde/domain': [[0, 1]] * n_dims})
+
+        # default value for rhs
+        if pde.get('rhs') is None:
+            self.config.update({'pde/rhs': lambda x: [tf.fill(tf.shape(x[:, 0]), 0.0)]*m_eqns})
+
+        # make sure that initial conditions are callable
+        init_cond = pde.get('initial_condition', None)
+        if init_cond is not None:
+            init_cond = init_cond if isinstance(init_cond, (tuple, list)) else (init_cond, )
+            self.config.update({'pde/initial_condition': init_cond})
+
+        # time_multiplier adjustments
+        time_ = pde.get("time_multiplier")
+        if time_ is None:
+            time_ = 'sigmoid'
+        if isinstance(time_, list):
+            if len(time_) != m_eqns:
+                time_modes = time_[0]*len(init_cond)
+            else:
+                time_modes = time_
+        if isinstance(time_, str):
+            time_modes = [time_ for _ in range(m_eqns)]
+        self.config.update({'pde/time_multiplier': time_modes})
+
+        # 'common' is updated with PDE-problem
+        config = super().build_config(names)
+        config['common'].update(self.config['pde'])
+
+        config = self._make_ops(config)
+        return config
+
+    def _make_ops(self, config):
+        """ Stores necessary operations in 'config'. """
+        # retrieving variables
+        n_dims = config.get('common/n_dims')
+        inputs = self.get('initial_block/inputs', config)
+        coordinates = [inputs.graph.get_tensor_by_name(self.__class__.__name__ + '/inputs/coordinates:' + str(i))
+                       for i in range(n_dims)]
+
+        config['output'] = []
+        config['predictions'] = self._make_form_calculator(config, coordinates, name='predictions')
+        return config
+
+    def _make_inputs(self, names=None, config=None):
+        """ Create needed placeholders. """
+        placeholders_, tensors_ = super()._make_inputs(names, config)
+
+        m_eqns = config.get('pde/m_eqns')
+        n_dims = config.get('pde/n_dims')
+
+        # split input so we can access individual variables later
+        tensors_['points'] = tf.split(tensors_['points'], n_dims, axis=1, name='coordinates')
+        tensors_['points'] = tf.concat(tensors_['points'], axis=1)
+
+        # calculate targets-tensor using rhs of pde and created points-tensor
+        points = getattr(self, 'inputs').get('points')
+        rhs = config.get('pde/rhs')
+        targets = rhs(points)
+        for i in range(m_eqns):
+            targets[i] = tf.reshape(targets[i], shape=(-1, 1))
+        self.store_to_attr('targets', targets)
+        return placeholders_, tensors_
+
+    @classmethod
+    def _make_form_calculator(cls, config, coordinates, name='_callable'):
+        """ Get callable that computes differential form of a tf.Tensor
+        with respect to coordinates.
+        """
+        form = config.get('common/form')
+        m_eqns = config.get('common/m_eqns')
+        n_dims = config.get('common/n_dims')
+        m, n = m_eqns, n_dims
+
+        d0_coeffs = form.get("d0", np.zeros(shape=(m, m)))
+        d1_coeffs = form.get("d1", np.zeros(shape=(m, m, n)))
+        d2_coeffs = form.get("d2", np.zeros(shape=(m, m, n, n)))
+
+        if (np.all(d1_coeffs == 0) and np.all(d2_coeffs == 0)):
+            raise ValueError('Nothing to compute here! Either d1 or d2 must be non-zero')
+
+        def _callable(net):
+            """ Compute differential form.
+            """
+#             net = tf.split(net, m_eqns, axis=1, name='net-split')
+            results = []
+            for m_eqn in range(m_eqns):
+                result = 0
+                for m_func in range(m_eqns):
+
+                    # derivatives of the zeroth order
+                    if d0_coeffs[m_eqn, m_func] != 0:
+                        result += d0_coeffs[m_eqn, m_func] * net[m_func]
+
+                    # derivatives of the first order
+                    for i, coeff in enumerate(d1_coeffs[m_eqn, m_func, :]):
+                        if coeff != 0:
+                            result += coeff * tf.gradients(net[m_func], coordinates[i])[0]
+
+                    # derivatives of the second order
+                    for i in range(n_dims):
+                        grad = tf.gradients(net[m_func], coordinates[i])[0]
+                        for j, coeff in enumerate(d2_coeffs[m_eqn, m_func, i, :]):
+                            if coeff != 0:
+                                result += coeff * tf.gradients(grad, coordinates[j])[0]
+
+                results.append(result)
+            return results
+
+        setattr(_callable, '__name__', name)
+        return _callable
+
+    def _build(self, config=None):
+        """ Overloads :meth:`.TFModel._build`: adds ansatz-block for binding
+        boundary and initial conditions.
+        """
+        inputs = config.pop('initial_block/inputs')
+        x = self._add_block('initial_block', config, inputs=inputs)
+        x = self._add_block('body', config, inputs=x)
+        x = self._add_block('head', config, inputs=x)
+        output = self._add_block('ansatz', config, inputs=x)
+        self.store_to_attr('solution', output)
+#         self.output(output, predictions=config['predictions'], ops=config['output'], **config['common'])
+        self._add_output_op(output, config['predictions'], 'predictions', '', **config['common'])
+
+    @classmethod
+    def head(cls, inputs, name='head', **kwargs):
+        m_eqns = kwargs.get('m_eqns')
+        heads = []
+        for i in range(m_eqns):
+            kwargs = cls.fill_params('head', **kwargs)
+            with tf.variable_scope('branch-' + str(i)):
+                branch = super().head(inputs, name=('head-' + str(i)), **kwargs)
+            heads.append(branch)
+        return heads
+
+    @classmethod
+    def ansatz(cls, inputs, **kwargs):
+        """ Binds `initial_condition` or `boundary_condition`, if these are supplied in the config
+        of the model. Does so by applying one of preset multipliers to the network output. Creates
+        a tf.Tensor `solution` - the final output of the model.
+        """
+        if kwargs.get("bind_bc_ic"):
+            # retrieving variables
+            m_eqns = kwargs.get('m_eqns')
+            n_dims = kwargs.get('n_dims')
+            coordinates = [inputs[0].graph.get_tensor_by_name(cls.__name__ + '/inputs/coordinates:' + str(i))
+                           for i in range(n_dims)]
+
+            domain = kwargs.get("domain")
+            bind_cond = kwargs.get("binding_condition")
+            lower, upper = [[bounds[i] for bounds in domain] for i in range(2)]
+
+            init_cond = kwargs.get("initial_condition")
+            n_dims_xs = n_dims if init_cond is None else n_dims - 1
+            xs_spatial = tf.concat(coordinates[:n_dims_xs], axis=1) if n_dims_xs > 0 else None
+
+            # multiplicator for binding boundary conditions
+            binding_multiplier = 1
+            if n_dims_xs > 0:
+                lower_tf, upper_tf = [tf.constant(bounds[:n_dims_xs], shape=(1, n_dims_xs), dtype=tf.float32)
+                                      for bounds in (lower, upper)]
+                binding_multiplier *= tf.reduce_prod((xs_spatial - lower_tf) * (upper_tf - xs_spatial) /
+                                                     (upper_tf - lower_tf)**2,
+                                                     axis=1, name='xs_multiplier', keepdims=True)
+
+            ansatz = []
+            for i in range(m_eqns):
+                add_term = 0
+                multiplier = 1
+                add_bind = 0
+
+                if init_cond:
+                    time_modes = kwargs.get("time_multiplier")
+                    shifted = coordinates[-1] - tf.constant(lower[-1], shape=(1, 1), dtype=tf.float32)
+
+                    add_term = add_term + init_cond[0](xs_spatial)[i]
+                    multiplier *= cls._make_time_multiplier(time_modes[i],
+                                                            '0' if len(init_cond) == 1 else '00')(shifted)
+
+                    if bind_cond:
+                        lower_tf, upper_tf = [tf.constant(bounds[:n_dims_xs], shape=(1, n_dims_xs), dtype=tf.float32)
+                                              for bounds in (lower, upper)]
+                        add_bind = ((bind_cond[0](coordinates[-1])[i] - init_cond[0](lower_tf)[i] / (multiplier + 2e1))
+                                    * ((upper_tf - xs_spatial) / (upper_tf - lower_tf)))
+
+                        # if there is a boundary condition for upper
+                        if len(bind_cond) > 1:
+                            add_bind = (add_bind
+                                        + (bind_cond[1](coordinates[-1])[i] - init_cond[0](upper_tf)[i]
+                                           / (multiplier + 1e1))
+                                        * ((xs_spatial - upper_tf) / (upper_tf - lower_tf)))
+
+                    # case of second derivative with respect to t in lhs of the equation
+                    if len(init_cond) > 1:
+                        add_term += (init_cond[1](xs_spatial)[i]
+                                     * cls._make_time_multiplier(time_modes[i], '01')(shifted))
+
+                # apply transformation to inputs
+                ansatz.append(add_term + multiplier * (inputs[i]*binding_multiplier + add_bind))
+
+#             ansatz = tf.concat(ansatz, axis=1, name='solution')
+        return ansatz
+
+    @classmethod
+    def _make_time_multiplier(cls, family, order=None):
+        r""" Produce time multiplier: a callable, applied to an arbitrary function to bind its value
+        and, possibly, first order derivataive w.r.t. to time at $t=0$.
+
+        Parameters
+        ----------
+        family : str or callable
+            defines the functional form of the multiplier, can be either `polynomial` or `sigmoid`.
+        order : str or None
+            sets the properties of the multiplier, can be either `0` or `00` or `01`. '0'
+            fixes the value of multiplier as $0$ at $t=0$, while '00' sets both value and derivative to $0$.
+            In the same manner, '01' sets the value at $t=0$ to $0$ and the derivative to $1$.
+
+        Returns
+        -------
+        callable
+
+        Examples
+        --------
+        Form an `solution`-tensor binding the initial value (at $t=0$) of the `network`-tensor to $sin(2 \pi x)$::
+
+            solution = network * DeepGalerkin._make_time_multiplier('sigmoid', '0')(t) + tf.sin(2 * np.pi * x)
+
+        Bind the initial value to $sin(2 \pi x)$ and the initial rate to $cos(2 \pi x)$::
+
+            solution = (network * DeepGalerkin._make_time_multiplier('polynomial', '00')(t) +
+                            tf.sin(2 * np.pi * x) +
+                            tf.cos(2 * np.pi * x) * DeepGalerkin._make_time_multiplier('polynomial', '01')(t))
+        """
+        if family == "sigmoid":
+            if order == '0':
+                def _callable(shifted_time):
+                    log_scale = tf.Variable(0.0, name='time_scale'+str(np.random.randint(100)))
+                    return tf.sigmoid(shifted_time * tf.exp(log_scale)) - 0.5
+            elif order == '00':
+                def _callable(shifted_time):
+                    log_scale = tf.Variable(0.0, name='time_scale'+str(np.random.randint(100)))
+                    scale = tf.exp(log_scale)
+                    return tf.sigmoid(shifted_time * scale) - tf.sigmoid(shifted_time) * scale - 1 / 2 + scale / 2
+            elif order == '01':
+                def _callable(shifted_time):
+                    log_scale = tf.Variable(0.0, name='time_scale'+str(np.random.randint(100)))
+                    scale = tf.exp(log_scale)
+                    return 4 * tf.sigmoid(shifted_time * scale) / scale - 2 / scale
+            else:
+                raise ValueError("Order " + str(order) + " is not supported.")
+
+        elif family == "polynomial":
+            if order == '0':
+                def _callable(shifted_time):
+                    log_scale = tf.Variable(0.0, name='time_scale'+str(np.random.randint(100)))
+                    return shifted_time * tf.exp(log_scale)
+            elif order == '00':
+                def _callable(shifted_time):
+                    return shifted_time ** 2 / 2
+            elif order == '01':
+                def _callable(shifted_time):
+                    return shifted_time
+            else:
+                raise ValueError("Order " + str(order) + " is not supported.")
+
+        elif callable(family):
+            _callable = family
+        else:
+            raise ValueError("'family' should be either 'sigmoid', 'polynomial' or callable.")
+
+        return _callable
+
+    def predict(self, fetches=None, feed_dict=None, **kwargs):
+        """ Get network-approximation of PDE-solution on a set of points. Overloads :meth:`.TFModel.predict` :
+        `solution`-tensor is now considered to be the main model-output.
+        """
+        fetches = 'solution' if fetches is None else fetches
+        return super().predict(fetches, feed_dict, **kwargs)
