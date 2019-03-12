@@ -661,7 +661,7 @@ class SystemDeepGalerkin(TFModel):
                             add_bind = (add_bind
                                         + (bind_cond[1](coordinates[-1])[i] - init_cond[0](upper_tf)[i]
                                            / (multiplier + 1e1))
-                                        * ((xs_spatial - upper_tf) / (upper_tf - lower_tf)))
+                                        * ((xs_spatial - lower_tf) / (upper_tf - lower_tf)))
 
                     # case of second derivative with respect to t in lhs of the equation
                     if len(init_cond) > 1:
