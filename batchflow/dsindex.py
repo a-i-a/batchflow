@@ -3,9 +3,11 @@ import os
 import sys
 import math
 import glob
+import threading
 from collections.abc import Iterable
 import numpy as np
 import tqdm
+
 from .base import Baseset
 
 
@@ -29,7 +31,25 @@ class DatasetIndex(Baseset):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self._pos = self.build_pos()
-        self._random_state = None
+
+    @property
+    def _iter_pos(self):
+        return self._thread_local.iter_pos
+
+    @_iter_pos.setter
+    def _iter_pos(self, value):
+        self._thread_local.iter_pos = value
+
+    def __iter__(self):
+        self._thread_local = threading.local()
+        self._thread_local.iter_pos = -1
+        return self
+
+    def __next__(self):
+        if self._iter_pos > len(self) - 2:
+            raise StopIteration()
+        self._iter_pos += 1
+        return self.indices[self._iter_pos]
 
     @classmethod
     def from_index(cls, *args, **kwargs):

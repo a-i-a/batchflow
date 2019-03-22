@@ -11,6 +11,8 @@ class Baseset:
         self.test = None
         self.validation = None
 
+        self._thread_local = None
+
         self._iter_params = None
         self.reset_iter()
 
