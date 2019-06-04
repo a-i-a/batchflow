@@ -1,0 +1,391 @@
+
+
+<!doctype html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>scipy.ndimage.fourier &#8212; BatchFlow 0.3.0 documentation</title>
+    <link rel="stylesheet" href="../../../_static/bizstyle.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../../_static/language_data.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="../../../_static/bizstyle.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <!--[if lt IE 9]>
+    <script type="text/javascript" src="_static/css3-mediaqueries.js"></script>
+    <![endif]-->
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">BatchFlow 0.3.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" accesskey="U">Module code</a> &#187;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for scipy.ndimage.fourier</h1><div class="highlight"><pre>
+<span></span><span class="c1"># Copyright (C) 2003-2005 Peter J. Verveer</span>
+<span class="c1">#</span>
+<span class="c1"># Redistribution and use in source and binary forms, with or without</span>
+<span class="c1"># modification, are permitted provided that the following conditions</span>
+<span class="c1"># are met:</span>
+<span class="c1">#</span>
+<span class="c1"># 1. Redistributions of source code must retain the above copyright</span>
+<span class="c1">#    notice, this list of conditions and the following disclaimer.</span>
+<span class="c1">#</span>
+<span class="c1"># 2. Redistributions in binary form must reproduce the above</span>
+<span class="c1">#    copyright notice, this list of conditions and the following</span>
+<span class="c1">#    disclaimer in the documentation and/or other materials provided</span>
+<span class="c1">#    with the distribution.</span>
+<span class="c1">#</span>
+<span class="c1"># 3. The name of the author may not be used to endorse or promote</span>
+<span class="c1">#    products derived from this software without specific prior</span>
+<span class="c1">#    written permission.</span>
+<span class="c1">#</span>
+<span class="c1"># THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS&#39;&#39; AND ANY EXPRESS</span>
+<span class="c1"># OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED</span>
+<span class="c1"># WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE</span>
+<span class="c1"># ARE DISCLAIMED. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY</span>
+<span class="c1"># DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL</span>
+<span class="c1"># DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE</span>
+<span class="c1"># GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS</span>
+<span class="c1"># INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY,</span>
+<span class="c1"># WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING</span>
+<span class="c1"># NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS</span>
+<span class="c1"># SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.</span>
+
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="k">import</span> <span class="n">division</span><span class="p">,</span> <span class="n">print_function</span><span class="p">,</span> <span class="n">absolute_import</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="k">import</span> <span class="n">_ni_support</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="k">import</span> <span class="n">_nd_image</span>
+
+<span class="n">__all__</span> <span class="o">=</span> <span class="p">[</span><span class="s1">&#39;fourier_gaussian&#39;</span><span class="p">,</span> <span class="s1">&#39;fourier_uniform&#39;</span><span class="p">,</span> <span class="s1">&#39;fourier_ellipsoid&#39;</span><span class="p">,</span>
+           <span class="s1">&#39;fourier_shift&#39;</span><span class="p">]</span>
+
+
+<span class="k">def</span> <span class="nf">_get_output_fourier</span><span class="p">(</span><span class="n">output</span><span class="p">,</span> <span class="nb">input</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">output</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">input</span><span class="o">.</span><span class="n">dtype</span><span class="o">.</span><span class="n">type</span> <span class="ow">in</span> <span class="p">[</span><span class="n">numpy</span><span class="o">.</span><span class="n">complex64</span><span class="p">,</span> <span class="n">numpy</span><span class="o">.</span><span class="n">complex128</span><span class="p">,</span>
+                                <span class="n">numpy</span><span class="o">.</span><span class="n">float32</span><span class="p">]:</span>
+            <span class="n">output</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="nb">input</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">input</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">output</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="nb">input</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">numpy</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="nb">type</span><span class="p">(</span><span class="n">output</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">type</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">output</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="n">numpy</span><span class="o">.</span><span class="n">complex64</span><span class="p">,</span> <span class="n">numpy</span><span class="o">.</span><span class="n">complex128</span><span class="p">,</span>
+                          <span class="n">numpy</span><span class="o">.</span><span class="n">float32</span><span class="p">,</span> <span class="n">numpy</span><span class="o">.</span><span class="n">float64</span><span class="p">]:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;output type not supported&quot;</span><span class="p">)</span>
+        <span class="n">output</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="nb">input</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">output</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">output</span><span class="o">.</span><span class="n">shape</span> <span class="o">!=</span> <span class="nb">input</span><span class="o">.</span><span class="n">shape</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;output shape not correct&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">output</span>
+
+
+<span class="k">def</span> <span class="nf">_get_output_fourier_complex</span><span class="p">(</span><span class="n">output</span><span class="p">,</span> <span class="nb">input</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">output</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">if</span> <span class="nb">input</span><span class="o">.</span><span class="n">dtype</span><span class="o">.</span><span class="n">type</span> <span class="ow">in</span> <span class="p">[</span><span class="n">numpy</span><span class="o">.</span><span class="n">complex64</span><span class="p">,</span> <span class="n">numpy</span><span class="o">.</span><span class="n">complex128</span><span class="p">]:</span>
+            <span class="n">output</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="nb">input</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">input</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">output</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="nb">input</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">numpy</span><span class="o">.</span><span class="n">complex128</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="nb">type</span><span class="p">(</span><span class="n">output</span><span class="p">)</span> <span class="ow">is</span> <span class="nb">type</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">output</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="n">numpy</span><span class="o">.</span><span class="n">complex64</span><span class="p">,</span> <span class="n">numpy</span><span class="o">.</span><span class="n">complex128</span><span class="p">]:</span>
+            <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;output type not supported&quot;</span><span class="p">)</span>
+        <span class="n">output</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="nb">input</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">output</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">output</span><span class="o">.</span><span class="n">shape</span> <span class="o">!=</span> <span class="nb">input</span><span class="o">.</span><span class="n">shape</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">RuntimeError</span><span class="p">(</span><span class="s2">&quot;output shape not correct&quot;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">output</span>
+
+
+<span class="k">def</span> <span class="nf">fourier_gaussian</span><span class="p">(</span><span class="nb">input</span><span class="p">,</span> <span class="n">sigma</span><span class="p">,</span> <span class="n">n</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span> <span class="n">output</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Multi-dimensional Gaussian fourier filter.</span>
+
+<span class="sd">    The array is multiplied with the fourier transform of a Gaussian</span>
+<span class="sd">    kernel.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    input : array_like</span>
+<span class="sd">        The input array.</span>
+<span class="sd">    sigma : float or sequence</span>
+<span class="sd">        The sigma of the Gaussian kernel. If a float, `sigma` is the same for</span>
+<span class="sd">        all axes. If a sequence, `sigma` has to contain one value for each</span>
+<span class="sd">        axis.</span>
+<span class="sd">    n : int, optional</span>
+<span class="sd">        If `n` is negative (default), then the input is assumed to be the</span>
+<span class="sd">        result of a complex fft.</span>
+<span class="sd">        If `n` is larger than or equal to zero, the input is assumed to be the</span>
+<span class="sd">        result of a real fft, and `n` gives the length of the array before</span>
+<span class="sd">        transformation along the real transform direction.</span>
+<span class="sd">    axis : int, optional</span>
+<span class="sd">        The axis of the real transform.</span>
+<span class="sd">    output : ndarray, optional</span>
+<span class="sd">        If given, the result of filtering the input is placed in this array.</span>
+<span class="sd">        None is returned in this case.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    fourier_gaussian : ndarray</span>
+<span class="sd">        The filtered input.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; from scipy import ndimage, misc</span>
+<span class="sd">    &gt;&gt;&gt; import numpy.fft</span>
+<span class="sd">    &gt;&gt;&gt; import matplotlib.pyplot as plt</span>
+<span class="sd">    &gt;&gt;&gt; fig, (ax1, ax2) = plt.subplots(1, 2)</span>
+<span class="sd">    &gt;&gt;&gt; plt.gray()  # show the filtered result in grayscale</span>
+<span class="sd">    &gt;&gt;&gt; ascent = misc.ascent()</span>
+<span class="sd">    &gt;&gt;&gt; input_ = numpy.fft.fft2(ascent)</span>
+<span class="sd">    &gt;&gt;&gt; result = ndimage.fourier_gaussian(input_, sigma=4)</span>
+<span class="sd">    &gt;&gt;&gt; result = numpy.fft.ifft2(result)</span>
+<span class="sd">    &gt;&gt;&gt; ax1.imshow(ascent)</span>
+<span class="sd">    &gt;&gt;&gt; ax2.imshow(result.real)  # the imaginary part is an artifact</span>
+<span class="sd">    &gt;&gt;&gt; plt.show()</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="nb">input</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="nb">input</span><span class="p">)</span>
+    <span class="n">output</span> <span class="o">=</span> <span class="n">_get_output_fourier</span><span class="p">(</span><span class="n">output</span><span class="p">,</span> <span class="nb">input</span><span class="p">)</span>
+    <span class="n">axis</span> <span class="o">=</span> <span class="n">_ni_support</span><span class="o">.</span><span class="n">_check_axis</span><span class="p">(</span><span class="n">axis</span><span class="p">,</span> <span class="nb">input</span><span class="o">.</span><span class="n">ndim</span><span class="p">)</span>
+    <span class="n">sigmas</span> <span class="o">=</span> <span class="n">_ni_support</span><span class="o">.</span><span class="n">_normalize_sequence</span><span class="p">(</span><span class="n">sigma</span><span class="p">,</span> <span class="nb">input</span><span class="o">.</span><span class="n">ndim</span><span class="p">)</span>
+    <span class="n">sigmas</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">sigmas</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">numpy</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">sigmas</span><span class="o">.</span><span class="n">flags</span><span class="o">.</span><span class="n">contiguous</span><span class="p">:</span>
+        <span class="n">sigmas</span> <span class="o">=</span> <span class="n">sigmas</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+
+    <span class="n">_nd_image</span><span class="o">.</span><span class="n">fourier_filter</span><span class="p">(</span><span class="nb">input</span><span class="p">,</span> <span class="n">sigmas</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">axis</span><span class="p">,</span> <span class="n">output</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">output</span>
+
+
+<span class="k">def</span> <span class="nf">fourier_uniform</span><span class="p">(</span><span class="nb">input</span><span class="p">,</span> <span class="n">size</span><span class="p">,</span> <span class="n">n</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span> <span class="n">output</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Multi-dimensional uniform fourier filter.</span>
+
+<span class="sd">    The array is multiplied with the fourier transform of a box of given</span>
+<span class="sd">    size.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    input : array_like</span>
+<span class="sd">        The input array.</span>
+<span class="sd">    size : float or sequence</span>
+<span class="sd">        The size of the box used for filtering.</span>
+<span class="sd">        If a float, `size` is the same for all axes. If a sequence, `size` has</span>
+<span class="sd">        to contain one value for each axis.</span>
+<span class="sd">    n : int, optional</span>
+<span class="sd">        If `n` is negative (default), then the input is assumed to be the</span>
+<span class="sd">        result of a complex fft.</span>
+<span class="sd">        If `n` is larger than or equal to zero, the input is assumed to be the</span>
+<span class="sd">        result of a real fft, and `n` gives the length of the array before</span>
+<span class="sd">        transformation along the real transform direction.</span>
+<span class="sd">    axis : int, optional</span>
+<span class="sd">        The axis of the real transform.</span>
+<span class="sd">    output : ndarray, optional</span>
+<span class="sd">        If given, the result of filtering the input is placed in this array.</span>
+<span class="sd">        None is returned in this case.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    fourier_uniform : ndarray</span>
+<span class="sd">        The filtered input.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; from scipy import ndimage, misc</span>
+<span class="sd">    &gt;&gt;&gt; import numpy.fft</span>
+<span class="sd">    &gt;&gt;&gt; import matplotlib.pyplot as plt</span>
+<span class="sd">    &gt;&gt;&gt; fig, (ax1, ax2) = plt.subplots(1, 2)</span>
+<span class="sd">    &gt;&gt;&gt; plt.gray()  # show the filtered result in grayscale</span>
+<span class="sd">    &gt;&gt;&gt; ascent = misc.ascent()</span>
+<span class="sd">    &gt;&gt;&gt; input_ = numpy.fft.fft2(ascent)</span>
+<span class="sd">    &gt;&gt;&gt; result = ndimage.fourier_uniform(input_, size=20)</span>
+<span class="sd">    &gt;&gt;&gt; result = numpy.fft.ifft2(result)</span>
+<span class="sd">    &gt;&gt;&gt; ax1.imshow(ascent)</span>
+<span class="sd">    &gt;&gt;&gt; ax2.imshow(result.real)  # the imaginary part is an artifact</span>
+<span class="sd">    &gt;&gt;&gt; plt.show()</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="nb">input</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="nb">input</span><span class="p">)</span>
+    <span class="n">output</span> <span class="o">=</span> <span class="n">_get_output_fourier</span><span class="p">(</span><span class="n">output</span><span class="p">,</span> <span class="nb">input</span><span class="p">)</span>
+    <span class="n">axis</span> <span class="o">=</span> <span class="n">_ni_support</span><span class="o">.</span><span class="n">_check_axis</span><span class="p">(</span><span class="n">axis</span><span class="p">,</span> <span class="nb">input</span><span class="o">.</span><span class="n">ndim</span><span class="p">)</span>
+    <span class="n">sizes</span> <span class="o">=</span> <span class="n">_ni_support</span><span class="o">.</span><span class="n">_normalize_sequence</span><span class="p">(</span><span class="n">size</span><span class="p">,</span> <span class="nb">input</span><span class="o">.</span><span class="n">ndim</span><span class="p">)</span>
+    <span class="n">sizes</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">sizes</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">numpy</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">sizes</span><span class="o">.</span><span class="n">flags</span><span class="o">.</span><span class="n">contiguous</span><span class="p">:</span>
+        <span class="n">sizes</span> <span class="o">=</span> <span class="n">sizes</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="n">_nd_image</span><span class="o">.</span><span class="n">fourier_filter</span><span class="p">(</span><span class="nb">input</span><span class="p">,</span> <span class="n">sizes</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">axis</span><span class="p">,</span> <span class="n">output</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">output</span>
+
+
+<span class="k">def</span> <span class="nf">fourier_ellipsoid</span><span class="p">(</span><span class="nb">input</span><span class="p">,</span> <span class="n">size</span><span class="p">,</span> <span class="n">n</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span> <span class="n">output</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Multi-dimensional ellipsoid fourier filter.</span>
+
+<span class="sd">    The array is multiplied with the fourier transform of a ellipsoid of</span>
+<span class="sd">    given sizes.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    input : array_like</span>
+<span class="sd">        The input array.</span>
+<span class="sd">    size : float or sequence</span>
+<span class="sd">        The size of the box used for filtering.</span>
+<span class="sd">        If a float, `size` is the same for all axes. If a sequence, `size` has</span>
+<span class="sd">        to contain one value for each axis.</span>
+<span class="sd">    n : int, optional</span>
+<span class="sd">        If `n` is negative (default), then the input is assumed to be the</span>
+<span class="sd">        result of a complex fft.</span>
+<span class="sd">        If `n` is larger than or equal to zero, the input is assumed to be the</span>
+<span class="sd">        result of a real fft, and `n` gives the length of the array before</span>
+<span class="sd">        transformation along the real transform direction.</span>
+<span class="sd">    axis : int, optional</span>
+<span class="sd">        The axis of the real transform.</span>
+<span class="sd">    output : ndarray, optional</span>
+<span class="sd">        If given, the result of filtering the input is placed in this array.</span>
+<span class="sd">        None is returned in this case.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    fourier_ellipsoid : ndarray</span>
+<span class="sd">        The filtered input.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    This function is implemented for arrays of rank 1, 2, or 3.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; from scipy import ndimage, misc</span>
+<span class="sd">    &gt;&gt;&gt; import numpy.fft</span>
+<span class="sd">    &gt;&gt;&gt; import matplotlib.pyplot as plt</span>
+<span class="sd">    &gt;&gt;&gt; fig, (ax1, ax2) = plt.subplots(1, 2)</span>
+<span class="sd">    &gt;&gt;&gt; plt.gray()  # show the filtered result in grayscale</span>
+<span class="sd">    &gt;&gt;&gt; ascent = misc.ascent()</span>
+<span class="sd">    &gt;&gt;&gt; input_ = numpy.fft.fft2(ascent)</span>
+<span class="sd">    &gt;&gt;&gt; result = ndimage.fourier_ellipsoid(input_, size=20)</span>
+<span class="sd">    &gt;&gt;&gt; result = numpy.fft.ifft2(result)</span>
+<span class="sd">    &gt;&gt;&gt; ax1.imshow(ascent)</span>
+<span class="sd">    &gt;&gt;&gt; ax2.imshow(result.real)  # the imaginary part is an artifact</span>
+<span class="sd">    &gt;&gt;&gt; plt.show()</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="nb">input</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="nb">input</span><span class="p">)</span>
+    <span class="n">output</span> <span class="o">=</span> <span class="n">_get_output_fourier</span><span class="p">(</span><span class="n">output</span><span class="p">,</span> <span class="nb">input</span><span class="p">)</span>
+    <span class="n">axis</span> <span class="o">=</span> <span class="n">_ni_support</span><span class="o">.</span><span class="n">_check_axis</span><span class="p">(</span><span class="n">axis</span><span class="p">,</span> <span class="nb">input</span><span class="o">.</span><span class="n">ndim</span><span class="p">)</span>
+    <span class="n">sizes</span> <span class="o">=</span> <span class="n">_ni_support</span><span class="o">.</span><span class="n">_normalize_sequence</span><span class="p">(</span><span class="n">size</span><span class="p">,</span> <span class="nb">input</span><span class="o">.</span><span class="n">ndim</span><span class="p">)</span>
+    <span class="n">sizes</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">sizes</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">numpy</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">sizes</span><span class="o">.</span><span class="n">flags</span><span class="o">.</span><span class="n">contiguous</span><span class="p">:</span>
+        <span class="n">sizes</span> <span class="o">=</span> <span class="n">sizes</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="n">_nd_image</span><span class="o">.</span><span class="n">fourier_filter</span><span class="p">(</span><span class="nb">input</span><span class="p">,</span> <span class="n">sizes</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">axis</span><span class="p">,</span> <span class="n">output</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">output</span>
+
+
+<span class="k">def</span> <span class="nf">fourier_shift</span><span class="p">(</span><span class="nb">input</span><span class="p">,</span> <span class="n">shift</span><span class="p">,</span> <span class="n">n</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span> <span class="n">axis</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span> <span class="n">output</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;</span>
+<span class="sd">    Multi-dimensional fourier shift filter.</span>
+
+<span class="sd">    The array is multiplied with the fourier transform of a shift operation.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    input : array_like</span>
+<span class="sd">        The input array.</span>
+<span class="sd">    shift : float or sequence</span>
+<span class="sd">        The size of the box used for filtering.</span>
+<span class="sd">        If a float, `shift` is the same for all axes. If a sequence, `shift`</span>
+<span class="sd">        has to contain one value for each axis.</span>
+<span class="sd">    n : int, optional</span>
+<span class="sd">        If `n` is negative (default), then the input is assumed to be the</span>
+<span class="sd">        result of a complex fft.</span>
+<span class="sd">        If `n` is larger than or equal to zero, the input is assumed to be the</span>
+<span class="sd">        result of a real fft, and `n` gives the length of the array before</span>
+<span class="sd">        transformation along the real transform direction.</span>
+<span class="sd">    axis : int, optional</span>
+<span class="sd">        The axis of the real transform.</span>
+<span class="sd">    output : ndarray, optional</span>
+<span class="sd">        If given, the result of shifting the input is placed in this array.</span>
+<span class="sd">        None is returned in this case.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    fourier_shift : ndarray</span>
+<span class="sd">        The shifted input.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; from scipy import ndimage, misc</span>
+<span class="sd">    &gt;&gt;&gt; import matplotlib.pyplot as plt</span>
+<span class="sd">    &gt;&gt;&gt; import numpy.fft</span>
+<span class="sd">    &gt;&gt;&gt; fig, (ax1, ax2) = plt.subplots(1, 2)</span>
+<span class="sd">    &gt;&gt;&gt; plt.gray()  # show the filtered result in grayscale</span>
+<span class="sd">    &gt;&gt;&gt; ascent = misc.ascent()</span>
+<span class="sd">    &gt;&gt;&gt; input_ = numpy.fft.fft2(ascent)</span>
+<span class="sd">    &gt;&gt;&gt; result = ndimage.fourier_shift(input_, shift=200)</span>
+<span class="sd">    &gt;&gt;&gt; result = numpy.fft.ifft2(result)</span>
+<span class="sd">    &gt;&gt;&gt; ax1.imshow(ascent)</span>
+<span class="sd">    &gt;&gt;&gt; ax2.imshow(result.real)  # the imaginary part is an artifact</span>
+<span class="sd">    &gt;&gt;&gt; plt.show()</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="nb">input</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="nb">input</span><span class="p">)</span>
+    <span class="n">output</span> <span class="o">=</span> <span class="n">_get_output_fourier_complex</span><span class="p">(</span><span class="n">output</span><span class="p">,</span> <span class="nb">input</span><span class="p">)</span>
+    <span class="n">axis</span> <span class="o">=</span> <span class="n">_ni_support</span><span class="o">.</span><span class="n">_check_axis</span><span class="p">(</span><span class="n">axis</span><span class="p">,</span> <span class="nb">input</span><span class="o">.</span><span class="n">ndim</span><span class="p">)</span>
+    <span class="n">shifts</span> <span class="o">=</span> <span class="n">_ni_support</span><span class="o">.</span><span class="n">_normalize_sequence</span><span class="p">(</span><span class="n">shift</span><span class="p">,</span> <span class="nb">input</span><span class="o">.</span><span class="n">ndim</span><span class="p">)</span>
+    <span class="n">shifts</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">shifts</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">numpy</span><span class="o">.</span><span class="n">float64</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">shifts</span><span class="o">.</span><span class="n">flags</span><span class="o">.</span><span class="n">contiguous</span><span class="p">:</span>
+        <span class="n">shifts</span> <span class="o">=</span> <span class="n">shifts</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="n">_nd_image</span><span class="o">.</span><span class="n">fourier_shift</span><span class="p">(</span><span class="nb">input</span><span class="p">,</span> <span class="n">shifts</span><span class="p">,</span> <span class="n">n</span><span class="p">,</span> <span class="n">axis</span><span class="p">,</span> <span class="n">output</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">output</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">BatchFlow 0.3.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2017, Analysis Center.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.1.0.
+    </div>
+  </body>
+</html>

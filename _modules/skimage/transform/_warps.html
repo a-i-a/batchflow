@@ -1,0 +1,983 @@
+
+
+<!doctype html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>skimage.transform._warps &#8212; BatchFlow 0.3.0 documentation</title>
+    <link rel="stylesheet" href="../../../_static/bizstyle.css" type="text/css" />
+    <link rel="stylesheet" href="../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript" id="documentation_options" data-url_root="../../../" src="../../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../../_static/language_data.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="../../../_static/bizstyle.js"></script>
+    <link rel="index" title="Index" href="../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../search.html" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <!--[if lt IE 9]>
+    <script type="text/javascript" src="_static/css3-mediaqueries.js"></script>
+    <![endif]-->
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">BatchFlow 0.3.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" accesskey="U">Module code</a> &#187;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for skimage.transform._warps</h1><div class="highlight"><pre>
+<span></span><span class="kn">import</span> <span class="nn">six</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">from</span> <span class="nn">scipy</span> <span class="k">import</span> <span class="n">ndimage</span> <span class="k">as</span> <span class="n">ndi</span>
+
+<span class="kn">from</span> <span class="nn">._geometric</span> <span class="k">import</span> <span class="p">(</span><span class="n">SimilarityTransform</span><span class="p">,</span> <span class="n">AffineTransform</span><span class="p">,</span>
+                         <span class="n">ProjectiveTransform</span><span class="p">,</span> <span class="n">_to_ndimage_mode</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">._warps_cy</span> <span class="k">import</span> <span class="n">_warp_fast</span>
+<span class="kn">from</span> <span class="nn">..measure</span> <span class="k">import</span> <span class="n">block_reduce</span>
+
+<span class="kn">from</span> <span class="nn">.._shared.utils</span> <span class="k">import</span> <span class="p">(</span><span class="n">get_bound_method_class</span><span class="p">,</span> <span class="n">safe_as_int</span><span class="p">,</span> <span class="n">warn</span><span class="p">,</span>
+                             <span class="n">convert_to_float</span><span class="p">)</span>
+
+<span class="n">HOMOGRAPHY_TRANSFORMS</span> <span class="o">=</span> <span class="p">(</span>
+    <span class="n">SimilarityTransform</span><span class="p">,</span>
+    <span class="n">AffineTransform</span><span class="p">,</span>
+    <span class="n">ProjectiveTransform</span>
+<span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_multichannel_default</span><span class="p">(</span><span class="n">multichannel</span><span class="p">,</span> <span class="n">ndim</span><span class="p">):</span>
+    <span class="k">if</span> <span class="n">multichannel</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">multichannel</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">warn</span><span class="p">(</span><span class="s1">&#39;The default multichannel argument (None) is deprecated.  Please &#39;</span>
+             <span class="s1">&#39;specify either True or False explicitly.  multichannel will &#39;</span>
+             <span class="s1">&#39;default to False starting with release 0.16.&#39;</span><span class="p">)</span>
+        <span class="c1"># utility for maintaining previous color image default behavior</span>
+        <span class="k">if</span> <span class="n">ndim</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">True</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">return</span> <span class="kc">False</span>
+
+
+<span class="k">def</span> <span class="nf">resize</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">output_shape</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">cval</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">clip</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+           <span class="n">preserve_range</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">anti_aliasing</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">anti_aliasing_sigma</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Resize image to match a certain size.</span>
+
+<span class="sd">    Performs interpolation to up-size or down-size images. Note that anti-</span>
+<span class="sd">    aliasing should be enabled when down-sizing images to avoid aliasing</span>
+<span class="sd">    artifacts. For down-sampling N-dimensional images with an integer factor</span>
+<span class="sd">    also see `skimage.transform.downscale_local_mean`.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    image : ndarray</span>
+<span class="sd">        Input image.</span>
+<span class="sd">    output_shape : tuple or ndarray</span>
+<span class="sd">        Size of the generated output image `(rows, cols[, ...][, dim])`. If</span>
+<span class="sd">        `dim` is not provided, the number of channels is preserved. In case the</span>
+<span class="sd">        number of input channels does not equal the number of output channels a</span>
+<span class="sd">        n-dimensional interpolation is applied.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    resized : ndarray</span>
+<span class="sd">        Resized version of the input.</span>
+
+<span class="sd">    Other parameters</span>
+<span class="sd">    ----------------</span>
+<span class="sd">    order : int, optional</span>
+<span class="sd">        The order of the spline interpolation, default is 1. The order has to</span>
+<span class="sd">        be in the range 0-5. See `skimage.transform.warp` for detail.</span>
+<span class="sd">    mode : {&#39;constant&#39;, &#39;edge&#39;, &#39;symmetric&#39;, &#39;reflect&#39;, &#39;wrap&#39;}, optional</span>
+<span class="sd">        Points outside the boundaries of the input are filled according</span>
+<span class="sd">        to the given mode.  Modes match the behaviour of `numpy.pad`.  The</span>
+<span class="sd">        default mode is &#39;constant&#39;.</span>
+<span class="sd">    cval : float, optional</span>
+<span class="sd">        Used in conjunction with mode &#39;constant&#39;, the value outside</span>
+<span class="sd">        the image boundaries.</span>
+<span class="sd">    clip : bool, optional</span>
+<span class="sd">        Whether to clip the output to the range of values of the input image.</span>
+<span class="sd">        This is enabled by default, since higher order interpolation may</span>
+<span class="sd">        produce values outside the given input range.</span>
+<span class="sd">    preserve_range : bool, optional</span>
+<span class="sd">        Whether to keep the original range of values. Otherwise, the input</span>
+<span class="sd">        image is converted according to the conventions of `img_as_float`.</span>
+<span class="sd">    anti_aliasing : bool, optional</span>
+<span class="sd">        Whether to apply a Gaussian filter to smooth the image prior to</span>
+<span class="sd">        down-scaling. It is crucial to filter when down-sampling the image to</span>
+<span class="sd">        avoid aliasing artifacts.</span>
+<span class="sd">    anti_aliasing_sigma : {float, tuple of floats}, optional</span>
+<span class="sd">        Standard deviation for Gaussian filtering to avoid aliasing artifacts.</span>
+<span class="sd">        By default, this value is chosen as (1 - s) / 2 where s is the</span>
+<span class="sd">        down-scaling factor.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    Modes &#39;reflect&#39; and &#39;symmetric&#39; are similar, but differ in whether the edge</span>
+<span class="sd">    pixels are duplicated during the reflection.  As an example, if an array</span>
+<span class="sd">    has values [0, 1, 2] and was padded to the right by four values using</span>
+<span class="sd">    symmetric, the result would be [0, 1, 2, 2, 1, 0, 0], while for reflect it</span>
+<span class="sd">    would be [0, 1, 2, 1, 0, 1, 2].</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; from skimage import data</span>
+<span class="sd">    &gt;&gt;&gt; from skimage.transform import resize</span>
+<span class="sd">    &gt;&gt;&gt; image = data.camera()</span>
+<span class="sd">    &gt;&gt;&gt; resize(image, (100, 100), mode=&#39;reflect&#39;).shape</span>
+<span class="sd">    (100, 100)</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">mode</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">mode</span> <span class="o">=</span> <span class="s1">&#39;constant&#39;</span>
+        <span class="n">warn</span><span class="p">(</span><span class="s2">&quot;The default mode, &#39;constant&#39;, will be changed to &#39;reflect&#39; in &quot;</span>
+             <span class="s2">&quot;skimage 0.15.&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">anti_aliasing</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">anti_aliasing</span> <span class="o">=</span> <span class="kc">False</span>
+        <span class="n">warn</span><span class="p">(</span><span class="s2">&quot;Anti-aliasing will be enabled by default in skimage 0.15 to &quot;</span>
+             <span class="s2">&quot;avoid aliasing artifacts when down-sampling images.&quot;</span><span class="p">)</span>
+
+    <span class="n">output_shape</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">output_shape</span><span class="p">)</span>
+    <span class="n">output_ndim</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">output_shape</span><span class="p">)</span>
+    <span class="n">input_shape</span> <span class="o">=</span> <span class="n">image</span><span class="o">.</span><span class="n">shape</span>
+    <span class="k">if</span> <span class="n">output_ndim</span> <span class="o">&gt;</span> <span class="n">image</span><span class="o">.</span><span class="n">ndim</span><span class="p">:</span>
+        <span class="c1"># append dimensions to input_shape</span>
+        <span class="n">input_shape</span> <span class="o">=</span> <span class="n">input_shape</span> <span class="o">+</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="p">)</span> <span class="o">*</span> <span class="p">(</span><span class="n">output_ndim</span> <span class="o">-</span> <span class="n">image</span><span class="o">.</span><span class="n">ndim</span><span class="p">)</span>
+        <span class="n">image</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">input_shape</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">output_ndim</span> <span class="o">==</span> <span class="n">image</span><span class="o">.</span><span class="n">ndim</span> <span class="o">-</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="c1"># multichannel case: append shape of last axis</span>
+        <span class="n">output_shape</span> <span class="o">=</span> <span class="n">output_shape</span> <span class="o">+</span> <span class="p">(</span><span class="n">image</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="p">)</span>
+    <span class="k">elif</span> <span class="n">output_ndim</span> <span class="o">&lt;</span> <span class="n">image</span><span class="o">.</span><span class="n">ndim</span> <span class="o">-</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;len(output_shape) cannot be smaller than the image &quot;</span>
+                         <span class="s2">&quot;dimensions&quot;</span><span class="p">)</span>
+
+    <span class="n">factors</span> <span class="o">=</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">input_shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">)</span> <span class="o">/</span>
+               <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">output_shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">float</span><span class="p">))</span>
+
+    <span class="k">if</span> <span class="n">anti_aliasing</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">anti_aliasing_sigma</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">anti_aliasing_sigma</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">maximum</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="p">(</span><span class="n">factors</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">anti_aliasing_sigma</span> <span class="o">=</span> \
+                <span class="n">np</span><span class="o">.</span><span class="n">atleast_1d</span><span class="p">(</span><span class="n">anti_aliasing_sigma</span><span class="p">)</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">ones_like</span><span class="p">(</span><span class="n">factors</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">anti_aliasing_sigma</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Anti-aliasing standard deviation must be &quot;</span>
+                                 <span class="s2">&quot;greater than or equal to zero&quot;</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">np</span><span class="o">.</span><span class="n">any</span><span class="p">((</span><span class="n">anti_aliasing_sigma</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">)</span> <span class="o">&amp;</span> <span class="p">(</span><span class="n">factors</span> <span class="o">&lt;=</span> <span class="mi">1</span><span class="p">)):</span>
+                <span class="n">warn</span><span class="p">(</span><span class="s2">&quot;Anti-aliasing standard deviation greater than zero but &quot;</span>
+                     <span class="s2">&quot;not down-sampling along all axes&quot;</span><span class="p">)</span>
+
+        <span class="n">image</span> <span class="o">=</span> <span class="n">ndi</span><span class="o">.</span><span class="n">gaussian_filter</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">anti_aliasing_sigma</span><span class="p">,</span>
+                                    <span class="n">cval</span><span class="o">=</span><span class="n">cval</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="n">mode</span><span class="p">)</span>
+
+    <span class="c1"># 2-dimensional interpolation</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">output_shape</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span> <span class="ow">or</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">output_shape</span><span class="p">)</span> <span class="o">==</span> <span class="mi">3</span> <span class="ow">and</span>
+                                  <span class="n">output_shape</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">==</span> <span class="n">input_shape</span><span class="p">[</span><span class="mi">2</span><span class="p">]):</span>
+        <span class="n">rows</span> <span class="o">=</span> <span class="n">output_shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">cols</span> <span class="o">=</span> <span class="n">output_shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">input_rows</span> <span class="o">=</span> <span class="n">input_shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">input_cols</span> <span class="o">=</span> <span class="n">input_shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">rows</span> <span class="o">==</span> <span class="mi">1</span> <span class="ow">and</span> <span class="n">cols</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">tform</span> <span class="o">=</span> <span class="n">AffineTransform</span><span class="p">(</span><span class="n">translation</span><span class="o">=</span><span class="p">(</span><span class="n">input_cols</span> <span class="o">/</span> <span class="mf">2.0</span> <span class="o">-</span> <span class="mf">0.5</span><span class="p">,</span>
+                                                 <span class="n">input_rows</span> <span class="o">/</span> <span class="mf">2.0</span> <span class="o">-</span> <span class="mf">0.5</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># 3 control points necessary to estimate exact AffineTransform</span>
+            <span class="n">src_corners</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="n">rows</span><span class="p">],</span> <span class="p">[</span><span class="n">cols</span><span class="p">,</span> <span class="n">rows</span><span class="p">]])</span> <span class="o">-</span> <span class="mi">1</span>
+            <span class="n">dst_corners</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">src_corners</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">double</span><span class="p">)</span>
+            <span class="c1"># take into account that 0th pixel is at position (0.5, 0.5)</span>
+            <span class="n">dst_corners</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">factors</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="n">src_corners</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="mf">0.5</span><span class="p">)</span> <span class="o">-</span> <span class="mf">0.5</span>
+            <span class="n">dst_corners</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">factors</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="n">src_corners</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="mf">0.5</span><span class="p">)</span> <span class="o">-</span> <span class="mf">0.5</span>
+
+            <span class="n">tform</span> <span class="o">=</span> <span class="n">AffineTransform</span><span class="p">()</span>
+            <span class="n">tform</span><span class="o">.</span><span class="n">estimate</span><span class="p">(</span><span class="n">src_corners</span><span class="p">,</span> <span class="n">dst_corners</span><span class="p">)</span>
+
+        <span class="n">out</span> <span class="o">=</span> <span class="n">warp</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">tform</span><span class="p">,</span> <span class="n">output_shape</span><span class="o">=</span><span class="n">output_shape</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="n">order</span><span class="p">,</span>
+                   <span class="n">mode</span><span class="o">=</span><span class="n">mode</span><span class="p">,</span> <span class="n">cval</span><span class="o">=</span><span class="n">cval</span><span class="p">,</span> <span class="n">clip</span><span class="o">=</span><span class="n">clip</span><span class="p">,</span>
+                   <span class="n">preserve_range</span><span class="o">=</span><span class="n">preserve_range</span><span class="p">)</span>
+
+    <span class="k">else</span><span class="p">:</span>  <span class="c1"># n-dimensional interpolation</span>
+        <span class="n">coord_arrays</span> <span class="o">=</span> <span class="p">[</span><span class="n">factors</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">*</span> <span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">d</span><span class="p">)</span> <span class="o">+</span> <span class="mf">0.5</span><span class="p">)</span> <span class="o">-</span> <span class="mf">0.5</span>
+                        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">d</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">output_shape</span><span class="p">)]</span>
+
+        <span class="n">coord_map</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">meshgrid</span><span class="p">(</span><span class="o">*</span><span class="n">coord_arrays</span><span class="p">,</span>
+                                         <span class="n">sparse</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+                                         <span class="n">indexing</span><span class="o">=</span><span class="s1">&#39;ij&#39;</span><span class="p">))</span>
+
+        <span class="n">image</span> <span class="o">=</span> <span class="n">convert_to_float</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">preserve_range</span><span class="p">)</span>
+
+        <span class="n">ndi_mode</span> <span class="o">=</span> <span class="n">_to_ndimage_mode</span><span class="p">(</span><span class="n">mode</span><span class="p">)</span>
+        <span class="n">out</span> <span class="o">=</span> <span class="n">ndi</span><span class="o">.</span><span class="n">map_coordinates</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">coord_map</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="n">order</span><span class="p">,</span>
+                                  <span class="n">mode</span><span class="o">=</span><span class="n">ndi_mode</span><span class="p">,</span> <span class="n">cval</span><span class="o">=</span><span class="n">cval</span><span class="p">)</span>
+
+        <span class="n">_clip_warp_output</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">out</span><span class="p">,</span> <span class="n">order</span><span class="p">,</span> <span class="n">mode</span><span class="p">,</span> <span class="n">cval</span><span class="p">,</span> <span class="n">clip</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">out</span>
+
+
+<span class="k">def</span> <span class="nf">rescale</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">scale</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">cval</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">clip</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+            <span class="n">preserve_range</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">multichannel</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+            <span class="n">anti_aliasing</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">anti_aliasing_sigma</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Scale image by a certain factor.</span>
+
+<span class="sd">    Performs interpolation to up-scale or down-scale images. Note that anti-</span>
+<span class="sd">    aliasing should be enabled when down-sizing images to avoid aliasing</span>
+<span class="sd">    artifacts. For down-sampling N-dimensional images with an integer factor</span>
+<span class="sd">    also see `skimage.transform.downscale_local_mean`.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    image : ndarray</span>
+<span class="sd">        Input image.</span>
+<span class="sd">    scale : {float, tuple of floats}</span>
+<span class="sd">        Scale factors. Separate scale factors can be defined as</span>
+<span class="sd">        `(rows, cols[, ...][, dim])`.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    scaled : ndarray</span>
+<span class="sd">        Scaled version of the input.</span>
+
+<span class="sd">    Other parameters</span>
+<span class="sd">    ----------------</span>
+<span class="sd">    order : int, optional</span>
+<span class="sd">        The order of the spline interpolation, default is 1. The order has to</span>
+<span class="sd">        be in the range 0-5. See `skimage.transform.warp` for detail.</span>
+<span class="sd">    mode : {&#39;constant&#39;, &#39;edge&#39;, &#39;symmetric&#39;, &#39;reflect&#39;, &#39;wrap&#39;}, optional</span>
+<span class="sd">        Points outside the boundaries of the input are filled according</span>
+<span class="sd">        to the given mode.  Modes match the behaviour of `numpy.pad`.  The</span>
+<span class="sd">        default mode is &#39;constant&#39;.</span>
+<span class="sd">    cval : float, optional</span>
+<span class="sd">        Used in conjunction with mode &#39;constant&#39;, the value outside</span>
+<span class="sd">        the image boundaries.</span>
+<span class="sd">    clip : bool, optional</span>
+<span class="sd">        Whether to clip the output to the range of values of the input image.</span>
+<span class="sd">        This is enabled by default, since higher order interpolation may</span>
+<span class="sd">        produce values outside the given input range.</span>
+<span class="sd">    preserve_range : bool, optional</span>
+<span class="sd">        Whether to keep the original range of values. Otherwise, the input</span>
+<span class="sd">        image is converted according to the conventions of `img_as_float`.</span>
+<span class="sd">    multichannel : bool, optional</span>
+<span class="sd">        Whether the last axis of the image is to be interpreted as multiple</span>
+<span class="sd">        channels or another spatial dimension. By default, is set to True for</span>
+<span class="sd">        3D (2D+color) inputs, and False for others. Starting in release 0.16,</span>
+<span class="sd">        this will always default to False.</span>
+<span class="sd">    anti_aliasing : bool, optional</span>
+<span class="sd">        Whether to apply a Gaussian filter to smooth the image prior to</span>
+<span class="sd">        down-scaling. It is crucial to filter when down-sampling the image to</span>
+<span class="sd">        avoid aliasing artifacts.</span>
+<span class="sd">    anti_aliasing_sigma : {float, tuple of floats}, optional</span>
+<span class="sd">        Standard deviation for Gaussian filtering to avoid aliasing artifacts.</span>
+<span class="sd">        By default, this value is chosen as (1 - s) / 2 where s is the</span>
+<span class="sd">        down-scaling factor.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    Modes &#39;reflect&#39; and &#39;symmetric&#39; are similar, but differ in whether the edge</span>
+<span class="sd">    pixels are duplicated during the reflection.  As an example, if an array</span>
+<span class="sd">    has values [0, 1, 2] and was padded to the right by four values using</span>
+<span class="sd">    symmetric, the result would be [0, 1, 2, 2, 1, 0, 0], while for reflect it</span>
+<span class="sd">    would be [0, 1, 2, 1, 0, 1, 2].</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; from skimage import data</span>
+<span class="sd">    &gt;&gt;&gt; from skimage.transform import rescale</span>
+<span class="sd">    &gt;&gt;&gt; image = data.camera()</span>
+<span class="sd">    &gt;&gt;&gt; rescale(image, 0.1, mode=&#39;reflect&#39;).shape</span>
+<span class="sd">    (51, 51)</span>
+<span class="sd">    &gt;&gt;&gt; rescale(image, 0.5, mode=&#39;reflect&#39;).shape</span>
+<span class="sd">    (256, 256)</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">multichannel</span> <span class="o">=</span> <span class="n">_multichannel_default</span><span class="p">(</span><span class="n">multichannel</span><span class="p">,</span> <span class="n">image</span><span class="o">.</span><span class="n">ndim</span><span class="p">)</span>
+    <span class="n">scale</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">atleast_1d</span><span class="p">(</span><span class="n">scale</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">scale</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">if</span> <span class="p">((</span><span class="ow">not</span> <span class="n">multichannel</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">scale</span><span class="p">)</span> <span class="o">!=</span> <span class="n">image</span><span class="o">.</span><span class="n">ndim</span><span class="p">)</span> <span class="ow">or</span>
+                <span class="p">(</span><span class="n">multichannel</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">scale</span><span class="p">)</span> <span class="o">!=</span> <span class="n">image</span><span class="o">.</span><span class="n">ndim</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)):</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Supply a single scale, or one value per spatial &quot;</span>
+                             <span class="s2">&quot;axis&quot;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">multichannel</span><span class="p">:</span>
+            <span class="n">scale</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">concatenate</span><span class="p">((</span><span class="n">scale</span><span class="p">,</span> <span class="p">[</span><span class="mi">1</span><span class="p">]))</span>
+    <span class="n">orig_shape</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">image</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+    <span class="n">output_shape</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">scale</span> <span class="o">*</span> <span class="n">orig_shape</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">multichannel</span><span class="p">:</span>  <span class="c1"># don&#39;t scale channel dimension</span>
+        <span class="n">output_shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">orig_shape</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+
+    <span class="k">return</span> <span class="n">resize</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">output_shape</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="n">order</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="n">mode</span><span class="p">,</span> <span class="n">cval</span><span class="o">=</span><span class="n">cval</span><span class="p">,</span>
+                  <span class="n">clip</span><span class="o">=</span><span class="n">clip</span><span class="p">,</span> <span class="n">preserve_range</span><span class="o">=</span><span class="n">preserve_range</span><span class="p">,</span>
+                  <span class="n">anti_aliasing</span><span class="o">=</span><span class="n">anti_aliasing</span><span class="p">,</span>
+                  <span class="n">anti_aliasing_sigma</span><span class="o">=</span><span class="n">anti_aliasing_sigma</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">rotate</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">angle</span><span class="p">,</span> <span class="n">resize</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">center</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;constant&#39;</span><span class="p">,</span>
+           <span class="n">cval</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">clip</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">preserve_range</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Rotate image by a certain angle around its center.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    image : ndarray</span>
+<span class="sd">        Input image.</span>
+<span class="sd">    angle : float</span>
+<span class="sd">        Rotation angle in degrees in counter-clockwise direction.</span>
+<span class="sd">    resize : bool, optional</span>
+<span class="sd">        Determine whether the shape of the output image will be automatically</span>
+<span class="sd">        calculated, so the complete rotated image exactly fits. Default is</span>
+<span class="sd">        False.</span>
+<span class="sd">    center : iterable of length 2</span>
+<span class="sd">        The rotation center. If ``center=None``, the image is rotated around</span>
+<span class="sd">        its center, i.e. ``center=(cols / 2 - 0.5, rows / 2 - 0.5)``.  Please</span>
+<span class="sd">        note that this parameter is (cols, rows), contrary to normal skimage</span>
+<span class="sd">        ordering.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    rotated : ndarray</span>
+<span class="sd">        Rotated version of the input.</span>
+
+<span class="sd">    Other parameters</span>
+<span class="sd">    ----------------</span>
+<span class="sd">    order : int, optional</span>
+<span class="sd">        The order of the spline interpolation, default is 1. The order has to</span>
+<span class="sd">        be in the range 0-5. See `skimage.transform.warp` for detail.</span>
+<span class="sd">    mode : {&#39;constant&#39;, &#39;edge&#39;, &#39;symmetric&#39;, &#39;reflect&#39;, &#39;wrap&#39;}, optional</span>
+<span class="sd">        Points outside the boundaries of the input are filled according</span>
+<span class="sd">        to the given mode.  Modes match the behaviour of `numpy.pad`.</span>
+<span class="sd">    cval : float, optional</span>
+<span class="sd">        Used in conjunction with mode &#39;constant&#39;, the value outside</span>
+<span class="sd">        the image boundaries.</span>
+<span class="sd">    clip : bool, optional</span>
+<span class="sd">        Whether to clip the output to the range of values of the input image.</span>
+<span class="sd">        This is enabled by default, since higher order interpolation may</span>
+<span class="sd">        produce values outside the given input range.</span>
+<span class="sd">    preserve_range : bool, optional</span>
+<span class="sd">        Whether to keep the original range of values. Otherwise, the input</span>
+<span class="sd">        image is converted according to the conventions of `img_as_float`.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    Modes &#39;reflect&#39; and &#39;symmetric&#39; are similar, but differ in whether the edge</span>
+<span class="sd">    pixels are duplicated during the reflection.  As an example, if an array</span>
+<span class="sd">    has values [0, 1, 2] and was padded to the right by four values using</span>
+<span class="sd">    symmetric, the result would be [0, 1, 2, 2, 1, 0, 0], while for reflect it</span>
+<span class="sd">    would be [0, 1, 2, 1, 0, 1, 2].</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; from skimage import data</span>
+<span class="sd">    &gt;&gt;&gt; from skimage.transform import rotate</span>
+<span class="sd">    &gt;&gt;&gt; image = data.camera()</span>
+<span class="sd">    &gt;&gt;&gt; rotate(image, 2).shape</span>
+<span class="sd">    (512, 512)</span>
+<span class="sd">    &gt;&gt;&gt; rotate(image, 2, resize=True).shape</span>
+<span class="sd">    (530, 530)</span>
+<span class="sd">    &gt;&gt;&gt; rotate(image, 90, resize=True).shape</span>
+<span class="sd">    (512, 512)</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+
+    <span class="n">rows</span><span class="p">,</span> <span class="n">cols</span> <span class="o">=</span> <span class="n">image</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">image</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+
+    <span class="c1"># rotation around center</span>
+    <span class="k">if</span> <span class="n">center</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">center</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">((</span><span class="n">cols</span><span class="p">,</span> <span class="n">rows</span><span class="p">))</span> <span class="o">/</span> <span class="mf">2.</span> <span class="o">-</span> <span class="mf">0.5</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">center</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">center</span><span class="p">)</span>
+    <span class="n">tform1</span> <span class="o">=</span> <span class="n">SimilarityTransform</span><span class="p">(</span><span class="n">translation</span><span class="o">=</span><span class="n">center</span><span class="p">)</span>
+    <span class="n">tform2</span> <span class="o">=</span> <span class="n">SimilarityTransform</span><span class="p">(</span><span class="n">rotation</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">deg2rad</span><span class="p">(</span><span class="n">angle</span><span class="p">))</span>
+    <span class="n">tform3</span> <span class="o">=</span> <span class="n">SimilarityTransform</span><span class="p">(</span><span class="n">translation</span><span class="o">=-</span><span class="n">center</span><span class="p">)</span>
+    <span class="n">tform</span> <span class="o">=</span> <span class="n">tform3</span> <span class="o">+</span> <span class="n">tform2</span> <span class="o">+</span> <span class="n">tform1</span>
+
+    <span class="n">output_shape</span> <span class="o">=</span> <span class="kc">None</span>
+    <span class="k">if</span> <span class="n">resize</span><span class="p">:</span>
+        <span class="c1"># determine shape of output image</span>
+        <span class="n">corners</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">([</span>
+            <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
+            <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="n">rows</span> <span class="o">-</span> <span class="mi">1</span><span class="p">],</span>
+            <span class="p">[</span><span class="n">cols</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="n">rows</span> <span class="o">-</span> <span class="mi">1</span><span class="p">],</span>
+            <span class="p">[</span><span class="n">cols</span> <span class="o">-</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
+        <span class="p">])</span>
+        <span class="n">corners</span> <span class="o">=</span> <span class="n">tform</span><span class="o">.</span><span class="n">inverse</span><span class="p">(</span><span class="n">corners</span><span class="p">)</span>
+        <span class="n">minc</span> <span class="o">=</span> <span class="n">corners</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">min</span><span class="p">()</span>
+        <span class="n">minr</span> <span class="o">=</span> <span class="n">corners</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">min</span><span class="p">()</span>
+        <span class="n">maxc</span> <span class="o">=</span> <span class="n">corners</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
+        <span class="n">maxr</span> <span class="o">=</span> <span class="n">corners</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
+        <span class="n">out_rows</span> <span class="o">=</span> <span class="n">maxr</span> <span class="o">-</span> <span class="n">minr</span> <span class="o">+</span> <span class="mi">1</span>
+        <span class="n">out_cols</span> <span class="o">=</span> <span class="n">maxc</span> <span class="o">-</span> <span class="n">minc</span> <span class="o">+</span> <span class="mi">1</span>
+        <span class="n">output_shape</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">ceil</span><span class="p">((</span><span class="n">out_rows</span><span class="p">,</span> <span class="n">out_cols</span><span class="p">))</span>
+
+        <span class="c1"># fit output image in new shape</span>
+        <span class="n">translation</span> <span class="o">=</span> <span class="p">(</span><span class="n">minc</span><span class="p">,</span> <span class="n">minr</span><span class="p">)</span>
+        <span class="n">tform4</span> <span class="o">=</span> <span class="n">SimilarityTransform</span><span class="p">(</span><span class="n">translation</span><span class="o">=</span><span class="n">translation</span><span class="p">)</span>
+        <span class="n">tform</span> <span class="o">=</span> <span class="n">tform4</span> <span class="o">+</span> <span class="n">tform</span>
+
+    <span class="k">return</span> <span class="n">warp</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">tform</span><span class="p">,</span> <span class="n">output_shape</span><span class="o">=</span><span class="n">output_shape</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="n">order</span><span class="p">,</span>
+                <span class="n">mode</span><span class="o">=</span><span class="n">mode</span><span class="p">,</span> <span class="n">cval</span><span class="o">=</span><span class="n">cval</span><span class="p">,</span> <span class="n">clip</span><span class="o">=</span><span class="n">clip</span><span class="p">,</span> <span class="n">preserve_range</span><span class="o">=</span><span class="n">preserve_range</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">downscale_local_mean</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">factors</span><span class="p">,</span> <span class="n">cval</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">clip</span><span class="o">=</span><span class="kc">True</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Down-sample N-dimensional image by local averaging.</span>
+
+<span class="sd">    The image is padded with `cval` if it is not perfectly divisible by the</span>
+<span class="sd">    integer factors.</span>
+
+<span class="sd">    In contrast to the 2-D interpolation in `skimage.transform.resize` and</span>
+<span class="sd">    `skimage.transform.rescale` this function may be applied to N-dimensional</span>
+<span class="sd">    images and calculates the local mean of elements in each block of size</span>
+<span class="sd">    `factors` in the input image.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    image : ndarray</span>
+<span class="sd">        N-dimensional input image.</span>
+<span class="sd">    factors : array_like</span>
+<span class="sd">        Array containing down-sampling integer factor along each axis.</span>
+<span class="sd">    cval : float, optional</span>
+<span class="sd">        Constant padding value if image is not perfectly divisible by the</span>
+<span class="sd">        integer factors.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    image : ndarray</span>
+<span class="sd">        Down-sampled image with same number of dimensions as input image.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; a = np.arange(15).reshape(3, 5)</span>
+<span class="sd">    &gt;&gt;&gt; a</span>
+<span class="sd">    array([[ 0,  1,  2,  3,  4],</span>
+<span class="sd">           [ 5,  6,  7,  8,  9],</span>
+<span class="sd">           [10, 11, 12, 13, 14]])</span>
+<span class="sd">    &gt;&gt;&gt; downscale_local_mean(a, (2, 3))</span>
+<span class="sd">    array([[ 3.5,  4. ],</span>
+<span class="sd">           [ 5.5,  4.5]])</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">return</span> <span class="n">block_reduce</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">factors</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">mean</span><span class="p">,</span> <span class="n">cval</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_swirl_mapping</span><span class="p">(</span><span class="n">xy</span><span class="p">,</span> <span class="n">center</span><span class="p">,</span> <span class="n">rotation</span><span class="p">,</span> <span class="n">strength</span><span class="p">,</span> <span class="n">radius</span><span class="p">):</span>
+    <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="o">=</span> <span class="n">xy</span><span class="o">.</span><span class="n">T</span>
+    <span class="n">x0</span><span class="p">,</span> <span class="n">y0</span> <span class="o">=</span> <span class="n">center</span>
+    <span class="n">rho</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">sqrt</span><span class="p">((</span><span class="n">x</span> <span class="o">-</span> <span class="n">x0</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span> <span class="o">+</span> <span class="p">(</span><span class="n">y</span> <span class="o">-</span> <span class="n">y0</span><span class="p">)</span> <span class="o">**</span> <span class="mi">2</span><span class="p">)</span>
+
+    <span class="c1"># Ensure that the transformation decays to approximately 1/1000-th</span>
+    <span class="c1"># within the specified radius.</span>
+    <span class="n">radius</span> <span class="o">=</span> <span class="n">radius</span> <span class="o">/</span> <span class="mi">5</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">log</span><span class="p">(</span><span class="mi">2</span><span class="p">)</span>
+
+    <span class="n">theta</span> <span class="o">=</span> <span class="n">rotation</span> <span class="o">+</span> <span class="n">strength</span> <span class="o">*</span> \
+        <span class="n">np</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="o">-</span><span class="n">rho</span> <span class="o">/</span> <span class="n">radius</span><span class="p">)</span> <span class="o">+</span> \
+        <span class="n">np</span><span class="o">.</span><span class="n">arctan2</span><span class="p">(</span><span class="n">y</span> <span class="o">-</span> <span class="n">y0</span><span class="p">,</span> <span class="n">x</span> <span class="o">-</span> <span class="n">x0</span><span class="p">)</span>
+
+    <span class="n">xy</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">x0</span> <span class="o">+</span> <span class="n">rho</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">cos</span><span class="p">(</span><span class="n">theta</span><span class="p">)</span>
+    <span class="n">xy</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="n">y0</span> <span class="o">+</span> <span class="n">rho</span> <span class="o">*</span> <span class="n">np</span><span class="o">.</span><span class="n">sin</span><span class="p">(</span><span class="n">theta</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">xy</span>
+
+
+<span class="k">def</span> <span class="nf">swirl</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">center</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">strength</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">radius</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span> <span class="n">rotation</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
+          <span class="n">output_shape</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">cval</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">clip</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+          <span class="n">preserve_range</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Perform a swirl transformation.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    image : ndarray</span>
+<span class="sd">        Input image.</span>
+<span class="sd">    center : (column, row) tuple or (2,) ndarray, optional</span>
+<span class="sd">        Center coordinate of transformation.</span>
+<span class="sd">    strength : float, optional</span>
+<span class="sd">        The amount of swirling applied.</span>
+<span class="sd">    radius : float, optional</span>
+<span class="sd">        The extent of the swirl in pixels.  The effect dies out</span>
+<span class="sd">        rapidly beyond `radius`.</span>
+<span class="sd">    rotation : float, optional</span>
+<span class="sd">        Additional rotation applied to the image.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    swirled : ndarray</span>
+<span class="sd">        Swirled version of the input.</span>
+
+<span class="sd">    Other parameters</span>
+<span class="sd">    ----------------</span>
+<span class="sd">    output_shape : tuple (rows, cols), optional</span>
+<span class="sd">        Shape of the output image generated. By default the shape of the input</span>
+<span class="sd">        image is preserved.</span>
+<span class="sd">    order : int, optional</span>
+<span class="sd">        The order of the spline interpolation, default is 1. The order has to</span>
+<span class="sd">        be in the range 0-5. See `skimage.transform.warp` for detail.</span>
+<span class="sd">    mode : {&#39;constant&#39;, &#39;edge&#39;, &#39;symmetric&#39;, &#39;reflect&#39;, &#39;wrap&#39;}, optional</span>
+<span class="sd">        Points outside the boundaries of the input are filled according</span>
+<span class="sd">        to the given mode, with &#39;constant&#39; used as the default. Modes match</span>
+<span class="sd">        the behaviour of `numpy.pad`.</span>
+<span class="sd">    cval : float, optional</span>
+<span class="sd">        Used in conjunction with mode &#39;constant&#39;, the value outside</span>
+<span class="sd">        the image boundaries.</span>
+<span class="sd">    clip : bool, optional</span>
+<span class="sd">        Whether to clip the output to the range of values of the input image.</span>
+<span class="sd">        This is enabled by default, since higher order interpolation may</span>
+<span class="sd">        produce values outside the given input range.</span>
+<span class="sd">    preserve_range : bool, optional</span>
+<span class="sd">        Whether to keep the original range of values. Otherwise, the input</span>
+<span class="sd">        image is converted according to the conventions of `img_as_float`.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">mode</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">warn</span><span class="p">(</span><span class="s1">&#39;The default of `mode` in `skimage.transform.swirl` &#39;</span>
+             <span class="s1">&#39;will change to `reflect` in version 0.15.&#39;</span><span class="p">)</span>
+        <span class="n">mode</span> <span class="o">=</span> <span class="s1">&#39;constant&#39;</span>
+
+    <span class="k">if</span> <span class="n">center</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">center</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">image</span><span class="o">.</span><span class="n">shape</span><span class="p">)[:</span><span class="mi">2</span><span class="p">][::</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">/</span> <span class="mi">2</span>
+
+    <span class="n">warp_args</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;center&#39;</span><span class="p">:</span> <span class="n">center</span><span class="p">,</span>
+                 <span class="s1">&#39;rotation&#39;</span><span class="p">:</span> <span class="n">rotation</span><span class="p">,</span>
+                 <span class="s1">&#39;strength&#39;</span><span class="p">:</span> <span class="n">strength</span><span class="p">,</span>
+                 <span class="s1">&#39;radius&#39;</span><span class="p">:</span> <span class="n">radius</span><span class="p">}</span>
+
+    <span class="k">return</span> <span class="n">warp</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">_swirl_mapping</span><span class="p">,</span> <span class="n">map_args</span><span class="o">=</span><span class="n">warp_args</span><span class="p">,</span>
+                <span class="n">output_shape</span><span class="o">=</span><span class="n">output_shape</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="n">order</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="n">mode</span><span class="p">,</span> <span class="n">cval</span><span class="o">=</span><span class="n">cval</span><span class="p">,</span>
+                <span class="n">clip</span><span class="o">=</span><span class="n">clip</span><span class="p">,</span> <span class="n">preserve_range</span><span class="o">=</span><span class="n">preserve_range</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_stackcopy</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="n">b</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Copy b into each color layer of a, such that::</span>
+
+<span class="sd">      a[:,:,0] = a[:,:,1] = ... = b</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    a : (M, N) or (M, N, P) ndarray</span>
+<span class="sd">        Target array.</span>
+<span class="sd">    b : (M, N)</span>
+<span class="sd">        Source array.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    Color images are stored as an ``(M, N, 3)`` or ``(M, N, 4)`` arrays.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">a</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+        <span class="n">a</span><span class="p">[:]</span> <span class="o">=</span> <span class="n">b</span><span class="p">[:,</span> <span class="p">:,</span> <span class="n">np</span><span class="o">.</span><span class="n">newaxis</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">a</span><span class="p">[:]</span> <span class="o">=</span> <span class="n">b</span>
+
+
+<span class="k">def</span> <span class="nf">warp_coords</span><span class="p">(</span><span class="n">coord_map</span><span class="p">,</span> <span class="n">shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">np</span><span class="o">.</span><span class="n">float64</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Build the source coordinates for the output of a 2-D image warp.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    coord_map : callable like GeometricTransform.inverse</span>
+<span class="sd">        Return input coordinates for given output coordinates.</span>
+<span class="sd">        Coordinates are in the shape (P, 2), where P is the number</span>
+<span class="sd">        of coordinates and each element is a ``(row, col)`` pair.</span>
+<span class="sd">    shape : tuple</span>
+<span class="sd">        Shape of output image ``(rows, cols[, bands])``.</span>
+<span class="sd">    dtype : np.dtype or string</span>
+<span class="sd">        dtype for return value (sane choices: float32 or float64).</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    coords : (ndim, rows, cols[, bands]) array of dtype `dtype`</span>
+<span class="sd">            Coordinates for `scipy.ndimage.map_coordinates`, that will yield</span>
+<span class="sd">            an image of shape (orows, ocols, bands) by drawing from source</span>
+<span class="sd">            points according to the `coord_transform_fn`.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+
+<span class="sd">    This is a lower-level routine that produces the source coordinates for 2-D</span>
+<span class="sd">    images used by `warp()`.</span>
+
+<span class="sd">    It is provided separately from `warp` to give additional flexibility to</span>
+<span class="sd">    users who would like, for example, to re-use a particular coordinate</span>
+<span class="sd">    mapping, to use specific dtypes at various points along the the</span>
+<span class="sd">    image-warping process, or to implement different post-processing logic</span>
+<span class="sd">    than `warp` performs after the call to `ndi.map_coordinates`.</span>
+
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    Produce a coordinate map that shifts an image up and to the right:</span>
+
+<span class="sd">    &gt;&gt;&gt; from skimage import data</span>
+<span class="sd">    &gt;&gt;&gt; from scipy.ndimage import map_coordinates</span>
+<span class="sd">    &gt;&gt;&gt;</span>
+<span class="sd">    &gt;&gt;&gt; def shift_up10_left20(xy):</span>
+<span class="sd">    ...     return xy - np.array([-20, 10])[None, :]</span>
+<span class="sd">    &gt;&gt;&gt;</span>
+<span class="sd">    &gt;&gt;&gt; image = data.astronaut().astype(np.float32)</span>
+<span class="sd">    &gt;&gt;&gt; coords = warp_coords(shift_up10_left20, image.shape)</span>
+<span class="sd">    &gt;&gt;&gt; warped_image = map_coordinates(image, coords)</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">shape</span> <span class="o">=</span> <span class="n">safe_as_int</span><span class="p">(</span><span class="n">shape</span><span class="p">)</span>
+    <span class="n">rows</span><span class="p">,</span> <span class="n">cols</span> <span class="o">=</span> <span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">coords_shape</span> <span class="o">=</span> <span class="p">[</span><span class="nb">len</span><span class="p">(</span><span class="n">shape</span><span class="p">),</span> <span class="n">rows</span><span class="p">,</span> <span class="n">cols</span><span class="p">]</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">shape</span><span class="p">)</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+        <span class="n">coords_shape</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+    <span class="n">coords</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">empty</span><span class="p">(</span><span class="n">coords_shape</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">)</span>
+
+    <span class="c1"># Reshape grid coordinates into a (P, 2) array of (row, col) pairs</span>
+    <span class="n">tf_coords</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">indices</span><span class="p">((</span><span class="n">cols</span><span class="p">,</span> <span class="n">rows</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">)</span><span class="o">.</span><span class="n">T</span>
+
+    <span class="c1"># Map each (row, col) pair to the source image according to</span>
+    <span class="c1"># the user-provided mapping</span>
+    <span class="n">tf_coords</span> <span class="o">=</span> <span class="n">coord_map</span><span class="p">(</span><span class="n">tf_coords</span><span class="p">)</span>
+
+    <span class="c1"># Reshape back to a (2, M, N) coordinate grid</span>
+    <span class="n">tf_coords</span> <span class="o">=</span> <span class="n">tf_coords</span><span class="o">.</span><span class="n">T</span><span class="o">.</span><span class="n">reshape</span><span class="p">((</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">cols</span><span class="p">,</span> <span class="n">rows</span><span class="p">))</span><span class="o">.</span><span class="n">swapaxes</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
+
+    <span class="c1"># Place the y-coordinate mapping</span>
+    <span class="n">_stackcopy</span><span class="p">(</span><span class="n">coords</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="n">tf_coords</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="o">...</span><span class="p">])</span>
+
+    <span class="c1"># Place the x-coordinate mapping</span>
+    <span class="n">_stackcopy</span><span class="p">(</span><span class="n">coords</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="o">...</span><span class="p">],</span> <span class="n">tf_coords</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="o">...</span><span class="p">])</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">shape</span><span class="p">)</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+        <span class="n">coords</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="o">...</span><span class="p">]</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+
+    <span class="k">return</span> <span class="n">coords</span>
+
+
+<span class="k">def</span> <span class="nf">_clip_warp_output</span><span class="p">(</span><span class="n">input_image</span><span class="p">,</span> <span class="n">output_image</span><span class="p">,</span> <span class="n">order</span><span class="p">,</span> <span class="n">mode</span><span class="p">,</span> <span class="n">cval</span><span class="p">,</span> <span class="n">clip</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Clip output image to range of values of input image.</span>
+
+<span class="sd">    Note that this function modifies the values of `output_image` in-place</span>
+<span class="sd">    and it is only modified if ``clip=True``.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    input_image : ndarray</span>
+<span class="sd">        Input image.</span>
+<span class="sd">    output_image : ndarray</span>
+<span class="sd">        Output image, which is modified in-place.</span>
+
+<span class="sd">    Other parameters</span>
+<span class="sd">    ----------------</span>
+<span class="sd">    order : int, optional</span>
+<span class="sd">        The order of the spline interpolation, default is 1. The order has to</span>
+<span class="sd">        be in the range 0-5. See `skimage.transform.warp` for detail.</span>
+<span class="sd">    mode : {&#39;constant&#39;, &#39;edge&#39;, &#39;symmetric&#39;, &#39;reflect&#39;, &#39;wrap&#39;}, optional</span>
+<span class="sd">        Points outside the boundaries of the input are filled according</span>
+<span class="sd">        to the given mode.  Modes match the behaviour of `numpy.pad`.</span>
+<span class="sd">    cval : float, optional</span>
+<span class="sd">        Used in conjunction with mode &#39;constant&#39;, the value outside</span>
+<span class="sd">        the image boundaries.</span>
+<span class="sd">    clip : bool, optional</span>
+<span class="sd">        Whether to clip the output to the range of values of the input image.</span>
+<span class="sd">        This is enabled by default, since higher order interpolation may</span>
+<span class="sd">        produce values outside the given input range.</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">clip</span> <span class="ow">and</span> <span class="n">order</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">min_val</span> <span class="o">=</span> <span class="n">input_image</span><span class="o">.</span><span class="n">min</span><span class="p">()</span>
+        <span class="n">max_val</span> <span class="o">=</span> <span class="n">input_image</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
+
+        <span class="n">preserve_cval</span> <span class="o">=</span> <span class="p">(</span><span class="n">mode</span> <span class="o">==</span> <span class="s1">&#39;constant&#39;</span> <span class="ow">and</span> <span class="ow">not</span>
+                         <span class="p">(</span><span class="n">min_val</span> <span class="o">&lt;=</span> <span class="n">cval</span> <span class="o">&lt;=</span> <span class="n">max_val</span><span class="p">))</span>
+
+        <span class="k">if</span> <span class="n">preserve_cval</span><span class="p">:</span>
+            <span class="n">cval_mask</span> <span class="o">=</span> <span class="n">output_image</span> <span class="o">==</span> <span class="n">cval</span>
+
+        <span class="n">np</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">output_image</span><span class="p">,</span> <span class="n">min_val</span><span class="p">,</span> <span class="n">max_val</span><span class="p">,</span> <span class="n">out</span><span class="o">=</span><span class="n">output_image</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">preserve_cval</span><span class="p">:</span>
+            <span class="n">output_image</span><span class="p">[</span><span class="n">cval_mask</span><span class="p">]</span> <span class="o">=</span> <span class="n">cval</span>
+
+
+<span class="k">def</span> <span class="nf">warp</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">inverse_map</span><span class="p">,</span> <span class="n">map_args</span><span class="o">=</span><span class="p">{},</span> <span class="n">output_shape</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+         <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;constant&#39;</span><span class="p">,</span> <span class="n">cval</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span> <span class="n">clip</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">preserve_range</span><span class="o">=</span><span class="kc">False</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Warp an image according to a given coordinate transformation.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    image : ndarray</span>
+<span class="sd">        Input image.</span>
+<span class="sd">    inverse_map : transformation object, callable ``cr = f(cr, **kwargs)``, or ndarray</span>
+<span class="sd">        Inverse coordinate map, which transforms coordinates in the output</span>
+<span class="sd">        images into their corresponding coordinates in the input image.</span>
+
+<span class="sd">        There are a number of different options to define this map, depending</span>
+<span class="sd">        on the dimensionality of the input image. A 2-D image can have 2</span>
+<span class="sd">        dimensions for gray-scale images, or 3 dimensions with color</span>
+<span class="sd">        information.</span>
+
+<span class="sd">         - For 2-D images, you can directly pass a transformation object,</span>
+<span class="sd">           e.g. `skimage.transform.SimilarityTransform`, or its inverse.</span>
+<span class="sd">         - For 2-D images, you can pass a ``(3, 3)`` homogeneous</span>
+<span class="sd">           transformation matrix, e.g.</span>
+<span class="sd">           `skimage.transform.SimilarityTransform.params`.</span>
+<span class="sd">         - For 2-D images, a function that transforms a ``(M, 2)`` array of</span>
+<span class="sd">           ``(col, row)`` coordinates in the output image to their</span>
+<span class="sd">           corresponding coordinates in the input image. Extra parameters to</span>
+<span class="sd">           the function can be specified through `map_args`.</span>
+<span class="sd">         - For N-D images, you can directly pass an array of coordinates.</span>
+<span class="sd">           The first dimension specifies the coordinates in the input image,</span>
+<span class="sd">           while the subsequent dimensions determine the position in the</span>
+<span class="sd">           output image. E.g. in case of 2-D images, you need to pass an array</span>
+<span class="sd">           of shape ``(2, rows, cols)``, where `rows` and `cols` determine the</span>
+<span class="sd">           shape of the output image, and the first dimension contains the</span>
+<span class="sd">           ``(row, col)`` coordinate in the input image.</span>
+<span class="sd">           See `scipy.ndimage.map_coordinates` for further documentation.</span>
+
+<span class="sd">        Note, that a ``(3, 3)`` matrix is interpreted as a homogeneous</span>
+<span class="sd">        transformation matrix, so you cannot interpolate values from a 3-D</span>
+<span class="sd">        input, if the output is of shape ``(3,)``.</span>
+
+<span class="sd">        See example section for usage.</span>
+<span class="sd">    map_args : dict, optional</span>
+<span class="sd">        Keyword arguments passed to `inverse_map`.</span>
+<span class="sd">    output_shape : tuple (rows, cols), optional</span>
+<span class="sd">        Shape of the output image generated. By default the shape of the input</span>
+<span class="sd">        image is preserved.  Note that, even for multi-band images, only rows</span>
+<span class="sd">        and columns need to be specified.</span>
+<span class="sd">    order : int, optional</span>
+<span class="sd">        The order of interpolation. The order has to be in the range 0-5:</span>
+<span class="sd">         - 0: Nearest-neighbor</span>
+<span class="sd">         - 1: Bi-linear (default)</span>
+<span class="sd">         - 2: Bi-quadratic</span>
+<span class="sd">         - 3: Bi-cubic</span>
+<span class="sd">         - 4: Bi-quartic</span>
+<span class="sd">         - 5: Bi-quintic</span>
+<span class="sd">    mode : {&#39;constant&#39;, &#39;edge&#39;, &#39;symmetric&#39;, &#39;reflect&#39;, &#39;wrap&#39;}, optional</span>
+<span class="sd">        Points outside the boundaries of the input are filled according</span>
+<span class="sd">        to the given mode.  Modes match the behaviour of `numpy.pad`.</span>
+<span class="sd">    cval : float, optional</span>
+<span class="sd">        Used in conjunction with mode &#39;constant&#39;, the value outside</span>
+<span class="sd">        the image boundaries.</span>
+<span class="sd">    clip : bool, optional</span>
+<span class="sd">        Whether to clip the output to the range of values of the input image.</span>
+<span class="sd">        This is enabled by default, since higher order interpolation may</span>
+<span class="sd">        produce values outside the given input range.</span>
+<span class="sd">    preserve_range : bool, optional</span>
+<span class="sd">        Whether to keep the original range of values. Otherwise, the input</span>
+<span class="sd">        image is converted according to the conventions of `img_as_float`.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    warped : double ndarray</span>
+<span class="sd">        The warped input image.</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    - The input image is converted to a `double` image.</span>
+<span class="sd">    - In case of a `SimilarityTransform`, `AffineTransform` and</span>
+<span class="sd">      `ProjectiveTransform` and `order` in [0, 3] this function uses the</span>
+<span class="sd">      underlying transformation matrix to warp the image with a much faster</span>
+<span class="sd">      routine.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    &gt;&gt;&gt; from skimage.transform import warp</span>
+<span class="sd">    &gt;&gt;&gt; from skimage import data</span>
+<span class="sd">    &gt;&gt;&gt; image = data.camera()</span>
+
+<span class="sd">    The following image warps are all equal but differ substantially in</span>
+<span class="sd">    execution time. The image is shifted to the bottom.</span>
+
+<span class="sd">    Use a geometric transform to warp an image (fast):</span>
+
+<span class="sd">    &gt;&gt;&gt; from skimage.transform import SimilarityTransform</span>
+<span class="sd">    &gt;&gt;&gt; tform = SimilarityTransform(translation=(0, -10))</span>
+<span class="sd">    &gt;&gt;&gt; warped = warp(image, tform)</span>
+
+<span class="sd">    Use a callable (slow):</span>
+
+<span class="sd">    &gt;&gt;&gt; def shift_down(xy):</span>
+<span class="sd">    ...     xy[:, 1] -= 10</span>
+<span class="sd">    ...     return xy</span>
+<span class="sd">    &gt;&gt;&gt; warped = warp(image, shift_down)</span>
+
+<span class="sd">    Use a transformation matrix to warp an image (fast):</span>
+
+<span class="sd">    &gt;&gt;&gt; matrix = np.array([[1, 0, 0], [0, 1, -10], [0, 0, 1]])</span>
+<span class="sd">    &gt;&gt;&gt; warped = warp(image, matrix)</span>
+<span class="sd">    &gt;&gt;&gt; from skimage.transform import ProjectiveTransform</span>
+<span class="sd">    &gt;&gt;&gt; warped = warp(image, ProjectiveTransform(matrix=matrix))</span>
+
+<span class="sd">    You can also use the inverse of a geometric transformation (fast):</span>
+
+<span class="sd">    &gt;&gt;&gt; warped = warp(image, tform.inverse)</span>
+
+<span class="sd">    For N-D images you can pass a coordinate array, that specifies the</span>
+<span class="sd">    coordinates in the input image for every element in the output image. E.g.</span>
+<span class="sd">    if you want to rescale a 3-D cube, you can do:</span>
+
+<span class="sd">    &gt;&gt;&gt; cube_shape = np.array([30, 30, 30])</span>
+<span class="sd">    &gt;&gt;&gt; cube = np.random.rand(*cube_shape)</span>
+
+<span class="sd">    Setup the coordinate array, that defines the scaling:</span>
+
+<span class="sd">    &gt;&gt;&gt; scale = 0.1</span>
+<span class="sd">    &gt;&gt;&gt; output_shape = (scale * cube_shape).astype(int)</span>
+<span class="sd">    &gt;&gt;&gt; coords0, coords1, coords2 = np.mgrid[:output_shape[0],</span>
+<span class="sd">    ...                    :output_shape[1], :output_shape[2]]</span>
+<span class="sd">    &gt;&gt;&gt; coords = np.array([coords0, coords1, coords2])</span>
+
+<span class="sd">    Assume that the cube contains spatial data, where the first array element</span>
+<span class="sd">    center is at coordinate (0.5, 0.5, 0.5) in real space, i.e. we have to</span>
+<span class="sd">    account for this extra offset when scaling the image:</span>
+
+<span class="sd">    &gt;&gt;&gt; coords = (coords + 0.5) / scale - 0.5</span>
+<span class="sd">    &gt;&gt;&gt; warped = warp(cube, coords)</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">image</span> <span class="o">=</span> <span class="n">convert_to_float</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">preserve_range</span><span class="p">)</span>
+
+    <span class="n">input_shape</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">image</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">output_shape</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="n">output_shape</span> <span class="o">=</span> <span class="n">input_shape</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">output_shape</span> <span class="o">=</span> <span class="n">safe_as_int</span><span class="p">(</span><span class="n">output_shape</span><span class="p">)</span>
+
+    <span class="n">warped</span> <span class="o">=</span> <span class="kc">None</span>
+
+    <span class="k">if</span> <span class="n">order</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="c1"># When fixing this issue, make sure to fix the branches further</span>
+        <span class="c1"># below in this function</span>
+        <span class="n">warn</span><span class="p">(</span><span class="s2">&quot;Bi-quadratic interpolation behavior has changed due &quot;</span>
+             <span class="s2">&quot;to a bug in the implementation of scikit-image. &quot;</span>
+             <span class="s2">&quot;The new version now serves as a wrapper &quot;</span>
+             <span class="s2">&quot;around SciPy&#39;s interpolation functions, which itself &quot;</span>
+             <span class="s2">&quot;is not verified to be a correct implementation. Until &quot;</span>
+             <span class="s2">&quot;skimage&#39;s implementation is fixed, we recommend &quot;</span>
+             <span class="s2">&quot;to use bi-linear or bi-cubic interpolation instead.&quot;</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">order</span> <span class="ow">in</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">)</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">map_args</span><span class="p">:</span>
+        <span class="c1"># use fast Cython version for specific interpolation orders and input</span>
+
+        <span class="n">matrix</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">inverse_map</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="ow">and</span> <span class="n">inverse_map</span><span class="o">.</span><span class="n">shape</span> <span class="o">==</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">):</span>
+            <span class="c1"># inverse_map is a transformation matrix as numpy array</span>
+            <span class="n">matrix</span> <span class="o">=</span> <span class="n">inverse_map</span>
+
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">inverse_map</span><span class="p">,</span> <span class="n">HOMOGRAPHY_TRANSFORMS</span><span class="p">):</span>
+            <span class="c1"># inverse_map is a homography</span>
+            <span class="n">matrix</span> <span class="o">=</span> <span class="n">inverse_map</span><span class="o">.</span><span class="n">params</span>
+
+        <span class="k">elif</span> <span class="p">(</span><span class="nb">hasattr</span><span class="p">(</span><span class="n">inverse_map</span><span class="p">,</span> <span class="s1">&#39;__name__&#39;</span><span class="p">)</span> <span class="ow">and</span>
+              <span class="n">inverse_map</span><span class="o">.</span><span class="vm">__name__</span> <span class="o">==</span> <span class="s1">&#39;inverse&#39;</span> <span class="ow">and</span>
+              <span class="n">get_bound_method_class</span><span class="p">(</span><span class="n">inverse_map</span><span class="p">)</span> <span class="ow">in</span> <span class="n">HOMOGRAPHY_TRANSFORMS</span><span class="p">):</span>
+            <span class="c1"># inverse_map is the inverse of a homography</span>
+            <span class="n">matrix</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">inv</span><span class="p">(</span><span class="n">six</span><span class="o">.</span><span class="n">get_method_self</span><span class="p">(</span><span class="n">inverse_map</span><span class="p">)</span><span class="o">.</span><span class="n">params</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">matrix</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">matrix</span> <span class="o">=</span> <span class="n">matrix</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="n">np</span><span class="o">.</span><span class="n">double</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">image</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+                <span class="n">warped</span> <span class="o">=</span> <span class="n">_warp_fast</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">matrix</span><span class="p">,</span>
+                                    <span class="n">output_shape</span><span class="o">=</span><span class="n">output_shape</span><span class="p">,</span>
+                                    <span class="n">order</span><span class="o">=</span><span class="n">order</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="n">mode</span><span class="p">,</span> <span class="n">cval</span><span class="o">=</span><span class="n">cval</span><span class="p">)</span>
+            <span class="k">elif</span> <span class="n">image</span><span class="o">.</span><span class="n">ndim</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+                <span class="n">dims</span> <span class="o">=</span> <span class="p">[]</span>
+                <span class="k">for</span> <span class="n">dim</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">image</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">]):</span>
+                    <span class="n">dims</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">_warp_fast</span><span class="p">(</span><span class="n">image</span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n">dim</span><span class="p">],</span> <span class="n">matrix</span><span class="p">,</span>
+                                           <span class="n">output_shape</span><span class="o">=</span><span class="n">output_shape</span><span class="p">,</span>
+                                           <span class="n">order</span><span class="o">=</span><span class="n">order</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="n">mode</span><span class="p">,</span> <span class="n">cval</span><span class="o">=</span><span class="n">cval</span><span class="p">))</span>
+                <span class="n">warped</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">dstack</span><span class="p">(</span><span class="n">dims</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">warped</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+        <span class="c1"># use ndi.map_coordinates</span>
+
+        <span class="k">if</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">inverse_map</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span> <span class="ow">and</span>
+                <span class="n">inverse_map</span><span class="o">.</span><span class="n">shape</span> <span class="o">==</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">)):</span>
+            <span class="c1"># inverse_map is a transformation matrix as numpy array,</span>
+            <span class="c1"># this is only used for order &gt;= 4.</span>
+            <span class="n">inverse_map</span> <span class="o">=</span> <span class="n">ProjectiveTransform</span><span class="p">(</span><span class="n">matrix</span><span class="o">=</span><span class="n">inverse_map</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">inverse_map</span><span class="p">,</span> <span class="n">np</span><span class="o">.</span><span class="n">ndarray</span><span class="p">):</span>
+            <span class="c1"># inverse_map is directly given as coordinates</span>
+            <span class="n">coords</span> <span class="o">=</span> <span class="n">inverse_map</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="c1"># inverse_map is given as function, that transforms (N, 2)</span>
+            <span class="c1"># destination coordinates to their corresponding source</span>
+            <span class="c1"># coordinates. This is only supported for 2(+1)-D images.</span>
+
+            <span class="k">if</span> <span class="n">image</span><span class="o">.</span><span class="n">ndim</span> <span class="o">&lt;</span> <span class="mi">2</span> <span class="ow">or</span> <span class="n">image</span><span class="o">.</span><span class="n">ndim</span> <span class="o">&gt;</span> <span class="mi">3</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Only 2-D images (grayscale or color) are &quot;</span>
+                                 <span class="s2">&quot;supported, when providing a callable &quot;</span>
+                                 <span class="s2">&quot;`inverse_map`.&quot;</span><span class="p">)</span>
+
+            <span class="k">def</span> <span class="nf">coord_map</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">):</span>
+                <span class="k">return</span> <span class="n">inverse_map</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">map_args</span><span class="p">)</span>
+
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">input_shape</span><span class="p">)</span> <span class="o">==</span> <span class="mi">3</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">output_shape</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+                <span class="c1"># Input image is 2D and has color channel, but output_shape is</span>
+                <span class="c1"># given for 2-D images. Automatically add the color channel</span>
+                <span class="c1"># dimensionality.</span>
+                <span class="n">output_shape</span> <span class="o">=</span> <span class="p">(</span><span class="n">output_shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">output_shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span>
+                                <span class="n">input_shape</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+
+            <span class="n">coords</span> <span class="o">=</span> <span class="n">warp_coords</span><span class="p">(</span><span class="n">coord_map</span><span class="p">,</span> <span class="n">output_shape</span><span class="p">)</span>
+
+        <span class="c1"># Pre-filtering not necessary for order 0, 1 interpolation</span>
+        <span class="n">prefilter</span> <span class="o">=</span> <span class="n">order</span> <span class="o">&gt;</span> <span class="mi">1</span>
+
+        <span class="n">ndi_mode</span> <span class="o">=</span> <span class="n">_to_ndimage_mode</span><span class="p">(</span><span class="n">mode</span><span class="p">)</span>
+        <span class="n">warped</span> <span class="o">=</span> <span class="n">ndi</span><span class="o">.</span><span class="n">map_coordinates</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">coords</span><span class="p">,</span> <span class="n">prefilter</span><span class="o">=</span><span class="n">prefilter</span><span class="p">,</span>
+                                     <span class="n">mode</span><span class="o">=</span><span class="n">ndi_mode</span><span class="p">,</span> <span class="n">order</span><span class="o">=</span><span class="n">order</span><span class="p">,</span> <span class="n">cval</span><span class="o">=</span><span class="n">cval</span><span class="p">)</span>
+
+    <span class="n">_clip_warp_output</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">warped</span><span class="p">,</span> <span class="n">order</span><span class="p">,</span> <span class="n">mode</span><span class="p">,</span> <span class="n">cval</span><span class="p">,</span> <span class="n">clip</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">warped</span>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../index.html">BatchFlow 0.3.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../index.html" >Module code</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2017, Analysis Center.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.1.0.
+    </div>
+  </body>
+</html>

@@ -1,0 +1,254 @@
+
+
+<!doctype html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>batchflow.opensets &#8212; BatchFlow 0.3.0 documentation</title>
+    <link rel="stylesheet" href="../_static/bizstyle.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="../_static/bizstyle.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="batchflow.models" href="batchflow.models.html" />
+    <link rel="prev" title="Exceptions" href="batchflow.exceptions.html" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <!--[if lt IE 9]>
+    <script type="text/javascript" src="_static/css3-mediaqueries.js"></script>
+    <![endif]-->
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="batchflow.models.html" title="batchflow.models"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="batchflow.exceptions.html" title="Exceptions"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">BatchFlow 0.3.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="batchflow.html" accesskey="U">API</a> &#187;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="../index.html">Table of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">batchflow.opensets</a><ul>
+<li><a class="reference internal" href="#mnist">MNIST</a></li>
+<li><a class="reference internal" href="#cifar10">CIFAR10</a></li>
+<li><a class="reference internal" href="#cifar100">CIFAR100</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="batchflow.exceptions.html"
+                        title="previous chapter">Exceptions</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="batchflow.models.html"
+                        title="next chapter">batchflow.models</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/api/batchflow.opensets.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="batchflow-opensets">
+<h1>batchflow.opensets<a class="headerlink" href="#batchflow-opensets" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="mnist">
+<h2>MNIST<a class="headerlink" href="#mnist" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="batchflow.opensets.MNIST">
+<em class="property">class </em><code class="sig-name descname">MNIST</code><span class="sig-paren">(</span><em class="sig-param">*args</em>, <em class="sig-param">bar=False</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/batchflow/opensets/mnist.html#MNIST"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#batchflow.opensets.MNIST" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">batchflow.opensets.base.ImagesOpenset</span></code></p>
+<p>MNIST dataset</p>
+<p class="rubric">Examples</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="c1"># download MNIST data, split into train/test and create dataset instances</span>
+<span class="n">mnist</span> <span class="o">=</span> <span class="n">MNIST</span><span class="p">()</span>
+<span class="c1"># iterate over the dataset</span>
+<span class="k">for</span> <span class="n">batch</span> <span class="ow">in</span> <span class="n">mnist</span><span class="o">.</span><span class="n">train</span><span class="o">.</span><span class="n">gen_batch</span><span class="p">(</span><span class="n">BATCH_SIZE</span><span class="p">,</span> <span class="n">shuffle</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">n_epochs</span><span class="o">=</span><span class="mi">2</span><span class="p">):</span>
+    <span class="c1"># do something with a batch</span>
+
+<span class="c1"># download MNIST data and show progress bar</span>
+<span class="n">mnist</span> <span class="o">=</span> <span class="n">MNIST</span><span class="p">(</span><span class="n">bar</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+<dl class="attribute">
+<dt id="batchflow.opensets.MNIST.ALL_URLS">
+<code class="sig-name descname">ALL_URLS</code><em class="property"> = ['http://yann.lecun.com/exdb/mnist/train-images-idx3-ubyte.gz', 'http://yann.lecun.com/exdb/mnist/train-labels-idx1-ubyte.gz', 'http://yann.lecun.com/exdb/mnist/t10k-images-idx3-ubyte.gz', 'http://yann.lecun.com/exdb/mnist/t10k-labels-idx1-ubyte.gz']</em><a class="headerlink" href="#batchflow.opensets.MNIST.ALL_URLS" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="batchflow.opensets.MNIST.TEST_IMAGES_URL">
+<code class="sig-name descname">TEST_IMAGES_URL</code><em class="property"> = 'http://yann.lecun.com/exdb/mnist/t10k-images-idx3-ubyte.gz'</em><a class="headerlink" href="#batchflow.opensets.MNIST.TEST_IMAGES_URL" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="batchflow.opensets.MNIST.TEST_LABELS_URL">
+<code class="sig-name descname">TEST_LABELS_URL</code><em class="property"> = 'http://yann.lecun.com/exdb/mnist/t10k-labels-idx1-ubyte.gz'</em><a class="headerlink" href="#batchflow.opensets.MNIST.TEST_LABELS_URL" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="batchflow.opensets.MNIST.TRAIN_IMAGES_URL">
+<code class="sig-name descname">TRAIN_IMAGES_URL</code><em class="property"> = 'http://yann.lecun.com/exdb/mnist/train-images-idx3-ubyte.gz'</em><a class="headerlink" href="#batchflow.opensets.MNIST.TRAIN_IMAGES_URL" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="batchflow.opensets.MNIST.TRAIN_LABELS_URL">
+<code class="sig-name descname">TRAIN_LABELS_URL</code><em class="property"> = 'http://yann.lecun.com/exdb/mnist/train-labels-idx1-ubyte.gz'</em><a class="headerlink" href="#batchflow.opensets.MNIST.TRAIN_LABELS_URL" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="batchflow.opensets.MNIST.download">
+<code class="sig-name descname">download</code><span class="sig-paren">(</span><em class="sig-param">url</em>, <em class="sig-param">content</em>, <em class="sig-param">path=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/batchflow/opensets/mnist.html#MNIST.download"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#batchflow.opensets.MNIST.download" title="Permalink to this definition">¶</a></dt>
+<dd><p>Load data from the web site</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="cifar10">
+<h2>CIFAR10<a class="headerlink" href="#cifar10" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="batchflow.opensets.CIFAR10">
+<em class="property">class </em><code class="sig-name descname">CIFAR10</code><span class="sig-paren">(</span><em class="sig-param">*args</em>, <em class="sig-param">bar=False</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/batchflow/opensets/cifar.html#CIFAR10"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#batchflow.opensets.CIFAR10" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">batchflow.opensets.cifar.BaseCIFAR</span></code></p>
+<p>CIFAR10 dataset</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># download CIFAR data, split into train/test and create dataset instances</span>
+<span class="n">cifar</span> <span class="o">=</span> <span class="n">CIFAR10</span><span class="p">()</span>
+
+<span class="c1"># iterate over the dataset</span>
+<span class="k">for</span> <span class="n">batch</span> <span class="ow">in</span> <span class="n">cifar</span><span class="o">.</span><span class="n">train</span><span class="o">.</span><span class="n">gen_batch</span><span class="p">(</span><span class="n">BATCH_SIZE</span><span class="p">,</span> <span class="n">shuffle</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">n_epochs</span><span class="o">=</span><span class="mi">2</span><span class="p">):</span>
+    <span class="c1"># do something with a batch</span>
+</pre></div>
+</div>
+<dl class="attribute">
+<dt id="batchflow.opensets.CIFAR10.LABELS_KEY">
+<code class="sig-name descname">LABELS_KEY</code><em class="property"> = b'labels'</em><a class="headerlink" href="#batchflow.opensets.CIFAR10.LABELS_KEY" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="batchflow.opensets.CIFAR10.SOURCE_URL">
+<code class="sig-name descname">SOURCE_URL</code><em class="property"> = 'https://www.cs.toronto.edu/~kriz/cifar-10-python.tar.gz'</em><a class="headerlink" href="#batchflow.opensets.CIFAR10.SOURCE_URL" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="batchflow.opensets.CIFAR10.TEST_NAME_ID">
+<code class="sig-name descname">TEST_NAME_ID</code><em class="property"> = 'test_batch'</em><a class="headerlink" href="#batchflow.opensets.CIFAR10.TEST_NAME_ID" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="batchflow.opensets.CIFAR10.TRAIN_NAME_ID">
+<code class="sig-name descname">TRAIN_NAME_ID</code><em class="property"> = 'data_batch'</em><a class="headerlink" href="#batchflow.opensets.CIFAR10.TRAIN_NAME_ID" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+<div class="section" id="cifar100">
+<h2>CIFAR100<a class="headerlink" href="#cifar100" title="Permalink to this headline">¶</a></h2>
+<dl class="class">
+<dt id="batchflow.opensets.CIFAR100">
+<em class="property">class </em><code class="sig-name descname">CIFAR100</code><span class="sig-paren">(</span><em class="sig-param">*args</em>, <em class="sig-param">bar=False</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/batchflow/opensets/cifar.html#CIFAR100"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#batchflow.opensets.CIFAR100" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">batchflow.opensets.cifar.BaseCIFAR</span></code></p>
+<p>CIFAR100 dataset</p>
+<p class="rubric">Examples</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># download CIFAR data, split into train/test and create dataset instances</span>
+<span class="n">cifar</span> <span class="o">=</span> <span class="n">CIFAR100</span><span class="p">()</span>
+
+<span class="c1"># iterate over the dataset</span>
+<span class="k">for</span> <span class="n">batch</span> <span class="ow">in</span> <span class="n">cifar</span><span class="o">.</span><span class="n">train</span><span class="o">.</span><span class="n">gen_batch</span><span class="p">(</span><span class="n">BATCH_SIZE</span><span class="p">,</span> <span class="n">shuffle</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">n_epochs</span><span class="o">=</span><span class="mi">5</span><span class="p">):</span>
+    <span class="c1"># do something with a batch</span>
+</pre></div>
+</div>
+<dl class="attribute">
+<dt id="batchflow.opensets.CIFAR100.LABELS_KEY">
+<code class="sig-name descname">LABELS_KEY</code><em class="property"> = b'fine_labels'</em><a class="headerlink" href="#batchflow.opensets.CIFAR100.LABELS_KEY" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="batchflow.opensets.CIFAR100.SOURCE_URL">
+<code class="sig-name descname">SOURCE_URL</code><em class="property"> = 'https://www.cs.toronto.edu/~kriz/cifar-100-python.tar.gz'</em><a class="headerlink" href="#batchflow.opensets.CIFAR100.SOURCE_URL" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="batchflow.opensets.CIFAR100.TEST_NAME_ID">
+<code class="sig-name descname">TEST_NAME_ID</code><em class="property"> = 'test'</em><a class="headerlink" href="#batchflow.opensets.CIFAR100.TEST_NAME_ID" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="attribute">
+<dt id="batchflow.opensets.CIFAR100.TRAIN_NAME_ID">
+<code class="sig-name descname">TRAIN_NAME_ID</code><em class="property"> = 'train'</em><a class="headerlink" href="#batchflow.opensets.CIFAR100.TRAIN_NAME_ID" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="batchflow.models.html" title="batchflow.models"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="batchflow.exceptions.html" title="Exceptions"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">BatchFlow 0.3.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="batchflow.html" >API</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2017, Analysis Center.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.1.0.
+    </div>
+  </body>
+</html>

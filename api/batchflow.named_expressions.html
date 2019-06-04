@@ -1,0 +1,451 @@
+
+
+<!doctype html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>Named expressions &#8212; BatchFlow 0.3.0 documentation</title>
+    <link rel="stylesheet" href="../_static/bizstyle.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="../_static/bizstyle.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Sampler" href="batchflow.sampler.html" />
+    <link rel="prev" title="Pipeline" href="batchflow.pipeline.html" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <!--[if lt IE 9]>
+    <script type="text/javascript" src="_static/css3-mediaqueries.js"></script>
+    <![endif]-->
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="batchflow.sampler.html" title="Sampler"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="batchflow.pipeline.html" title="Pipeline"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">BatchFlow 0.3.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="batchflow.html" >API</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="batchflow.core.html" accesskey="U">batchflow</a> &#187;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="batchflow.pipeline.html"
+                        title="previous chapter">Pipeline</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="batchflow.sampler.html"
+                        title="next chapter">Sampler</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/api/batchflow.named_expressions.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="named-expressions">
+<h1>Named expressions<a class="headerlink" href="#named-expressions" title="Permalink to this headline">¶</a></h1>
+<div class="toctree-wrapper compound">
+</div>
+<span class="target" id="module-batchflow.named_expr"></span><p>Contains named expression classes</p>
+<dl class="class">
+<dt id="batchflow.named_expr.NamedExpression">
+<em class="property">class </em><code class="sig-name descname">NamedExpression</code><span class="sig-paren">(</span><em class="sig-param">name</em>, <em class="sig-param">mode='w'</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/batchflow/named_expr.html#NamedExpression"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#batchflow.named_expr.NamedExpression" title="Permalink to this definition">¶</a></dt>
+<dd><p>Base class for a named expression</p>
+<dl class="attribute">
+<dt id="batchflow.named_expr.NamedExpression.name">
+<code class="sig-name descname">name</code><a class="headerlink" href="#batchflow.named_expr.NamedExpression.name" title="Permalink to this definition">¶</a></dt>
+<dd><p>a name</p>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)">str</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="attribute">
+<dt id="batchflow.named_expr.NamedExpression.mode">
+<code class="sig-name descname">mode</code><a class="headerlink" href="#batchflow.named_expr.NamedExpression.mode" title="Permalink to this definition">¶</a></dt>
+<dd><p>a default assignment method: write, append, extend, update.
+Can be shrotened to jiust the first letter: w, a, e, u.</p>
+<ul class="simple">
+<li><p>‘w’ - overwrite with a new value. This is a default mode.</p></li>
+<li><dl class="simple">
+<dt>‘a’ - append a new value</dt><dd><p>(see list.append <a class="reference external" href="https://docs.python.org/3/tutorial/datastructures.html#more-on-lists">https://docs.python.org/3/tutorial/datastructures.html#more-on-lists</a>)</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>‘e’ - extend with a new value</dt><dd><p>(see list.extend <a class="reference external" href="https://docs.python.org/3/tutorial/datastructures.html#more-on-lists">https://docs.python.org/3/tutorial/datastructures.html#more-on-lists</a>)</p>
+</dd>
+</dl>
+</li>
+<li><dl class="simple">
+<dt>‘u’ - update with a new value</dt><dd><p>(see dict.update <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict.update">https://docs.python.org/3/library/stdtypes.html#dict.update</a>
+or set.update <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#frozenset.update">https://docs.python.org/3/library/stdtypes.html#frozenset.update</a>)</p>
+</dd>
+</dl>
+</li>
+</ul>
+<dl class="field-list simple">
+<dt class="field-odd">Type</dt>
+<dd class="field-odd"><p><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)">str</a></p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="batchflow.named_expr.NamedExpression.get">
+<code class="sig-name descname">get</code><span class="sig-paren">(</span><em class="sig-param">batch=None</em>, <em class="sig-param">pipeline=None</em>, <em class="sig-param">model=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/batchflow/named_expr.html#NamedExpression.get"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#batchflow.named_expr.NamedExpression.get" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a value of a named expression</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>batch</strong> – a batch which should be used to calculate a value</p></li>
+<li><p><strong>pipeline</strong> – a pipeline which should be used to calculate a value
+(might be omitted if batch is passed)</p></li>
+<li><p><strong>model</strong> – a model which should be used to calculate a value
+(usually omitted, but might be useful for F- and L-expressions)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="batchflow.named_expr.NamedExpression.set">
+<code class="sig-name descname">set</code><span class="sig-paren">(</span><em class="sig-param">value</em>, <em class="sig-param">batch=None</em>, <em class="sig-param">pipeline=None</em>, <em class="sig-param">model=None</em>, <em class="sig-param">mode=None</em>, <em class="sig-param">eval=True</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/batchflow/named_expr.html#NamedExpression.set"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#batchflow.named_expr.NamedExpression.set" title="Permalink to this definition">¶</a></dt>
+<dd><p>Set a value to a named expression</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>batch</strong> – a batch which should be used to calculate a value</p></li>
+<li><p><strong>pipeline</strong> – a pipeline which should be used to calculate a value
+(might be omitted if batch is passed)</p></li>
+<li><p><strong>model</strong> – a model which should be used to calculate a value
+(usually omitted, but might be useful for F- and L-expressions)</p></li>
+<li><p><strong>mode</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)"><em>str</em></a>) – an assignment method: write, append, extend, update.
+A default mode may be specified when instantiating an expression.</p></li>
+<li><p><strong>eval</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.7)"><em>bool</em></a>) – whether to evaluate value before assigning it to the expression
+(as value might contain other named expressions,
+so it should be processed recursively)</p></li>
+</ul>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="batchflow.named_expr.NamedExpression.assign">
+<code class="sig-name descname">assign</code><span class="sig-paren">(</span><em class="sig-param">value</em>, <em class="sig-param">batch=None</em>, <em class="sig-param">pipeline=None</em>, <em class="sig-param">model=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/batchflow/named_expr.html#NamedExpression.assign"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#batchflow.named_expr.NamedExpression.assign" title="Permalink to this definition">¶</a></dt>
+<dd><p>Assign a value to a named expression</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="batchflow.named_expr.NamedExpression.append">
+<code class="sig-name descname">append</code><span class="sig-paren">(</span><em class="sig-param">value</em>, <em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/batchflow/named_expr.html#NamedExpression.append"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#batchflow.named_expr.NamedExpression.append" title="Permalink to this definition">¶</a></dt>
+<dd><p>Append a value to a named expression</p>
+<p>if a named expression is a dict or set, <cite>update</cite> is called, or <cite>append</cite> otherwise.</p>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p><code class="xref py py-meth docutils literal notranslate"><span class="pre">list.append()</span></code>, <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict.update" title="(in Python v3.7)"><code class="xref py py-meth docutils literal notranslate"><span class="pre">dict.update()</span></code></a>, <code class="xref py py-meth docutils literal notranslate"><span class="pre">set.update()</span></code></p>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="batchflow.named_expr.NamedExpression.extend">
+<code class="sig-name descname">extend</code><span class="sig-paren">(</span><em class="sig-param">value</em>, <em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/batchflow/named_expr.html#NamedExpression.extend"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#batchflow.named_expr.NamedExpression.extend" title="Permalink to this definition">¶</a></dt>
+<dd><p>Extend a named expression with a new value
+(see list.extend <a class="reference external" href="https://docs.python.org/3/tutorial/datastructures.html#more-on-lists">https://docs.python.org/3/tutorial/datastructures.html#more-on-lists</a>)</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="batchflow.named_expr.NamedExpression.update">
+<code class="sig-name descname">update</code><span class="sig-paren">(</span><em class="sig-param">value</em>, <em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/batchflow/named_expr.html#NamedExpression.update"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#batchflow.named_expr.NamedExpression.update" title="Permalink to this definition">¶</a></dt>
+<dd><p>Update a named expression with a new value
+(see dict.update <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict.update">https://docs.python.org/3/library/stdtypes.html#dict.update</a>
+or set.update <a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#frozenset.update">https://docs.python.org/3/library/stdtypes.html#frozenset.update</a>)</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="batchflow.named_expr.W">
+<em class="property">class </em><code class="sig-name descname">W</code><span class="sig-paren">(</span><em class="sig-param">name</em>, <em class="sig-param">mode='w'</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/batchflow/named_expr.html#W"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#batchflow.named_expr.W" title="Permalink to this definition">¶</a></dt>
+<dd><p>A wrapper which returns the wrapped named expression without evaluating it</p>
+<p class="rubric">Examples</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">W</span><span class="p">(</span><span class="n">V</span><span class="p">(</span><span class="s1">&#39;variable&#39;</span><span class="p">))</span>
+<span class="n">W</span><span class="p">(</span><span class="n">B</span><span class="p">(</span><span class="n">copy</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
+<span class="n">W</span><span class="p">(</span><span class="n">R</span><span class="p">(</span><span class="s1">&#39;normal&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="n">B</span><span class="p">(</span><span class="s1">&#39;size&#39;</span><span class="p">)))</span>
+</pre></div>
+</div>
+<dl class="method">
+<dt id="batchflow.named_expr.W.get">
+<code class="sig-name descname">get</code><span class="sig-paren">(</span><em class="sig-param">batch=None</em>, <em class="sig-param">pipeline=None</em>, <em class="sig-param">model=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/batchflow/named_expr.html#W.get"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#batchflow.named_expr.W.get" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a wrapped named expression</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="batchflow.named_expr.W.assign">
+<code class="sig-name descname">assign</code><span class="sig-paren">(</span><em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/batchflow/named_expr.html#W.assign"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#batchflow.named_expr.W.assign" title="Permalink to this definition">¶</a></dt>
+<dd><p>Assign a value</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="batchflow.named_expr.eval_expr">
+<code class="sig-name descname">eval_expr</code><span class="sig-paren">(</span><em class="sig-param">expr</em>, <em class="sig-param">batch=None</em>, <em class="sig-param">pipeline=None</em>, <em class="sig-param">model=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/batchflow/named_expr.html#eval_expr"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#batchflow.named_expr.eval_expr" title="Permalink to this definition">¶</a></dt>
+<dd><p>Evaluate a named expression recursively</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="batchflow.named_expr.B">
+<em class="property">class </em><code class="sig-name descname">B</code><span class="sig-paren">(</span><em class="sig-param">name</em>, <em class="sig-param">mode='w'</em>, <em class="sig-param">copy=False</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/batchflow/named_expr.html#B"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#batchflow.named_expr.B" title="Permalink to this definition">¶</a></dt>
+<dd><p>Batch component or attribute name</p>
+<p class="rubric">Notes</p>
+<p><code class="docutils literal notranslate"><span class="pre">B()</span></code> return the batch itself.</p>
+<p>To avoid unexpected data changes the copy of the batch may be returned, if <code class="docutils literal notranslate"><span class="pre">copy=True</span></code>.</p>
+<p class="rubric">Examples</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">B</span><span class="p">(</span><span class="s1">&#39;size&#39;</span><span class="p">)</span>
+<span class="n">B</span><span class="p">(</span><span class="s1">&#39;images_shape&#39;</span><span class="p">)</span>
+<span class="n">B</span><span class="p">(</span><span class="n">copy</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+</pre></div>
+</div>
+<dl class="method">
+<dt id="batchflow.named_expr.B.get">
+<code class="sig-name descname">get</code><span class="sig-paren">(</span><em class="sig-param">batch=None</em>, <em class="sig-param">pipeline=None</em>, <em class="sig-param">model=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/batchflow/named_expr.html#B.get"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#batchflow.named_expr.B.get" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a value of a batch component</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="batchflow.named_expr.B.assign">
+<code class="sig-name descname">assign</code><span class="sig-paren">(</span><em class="sig-param">value</em>, <em class="sig-param">batch=None</em>, <em class="sig-param">pipeline=None</em>, <em class="sig-param">model=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/batchflow/named_expr.html#B.assign"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#batchflow.named_expr.B.assign" title="Permalink to this definition">¶</a></dt>
+<dd><p>Assign a value to a batch component</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="batchflow.named_expr.C">
+<em class="property">class </em><code class="sig-name descname">C</code><span class="sig-paren">(</span><em class="sig-param">name</em>, <em class="sig-param">mode='w'</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/batchflow/named_expr.html#C"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#batchflow.named_expr.C" title="Permalink to this definition">¶</a></dt>
+<dd><p>A pipeline config option</p>
+<p class="rubric">Examples</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">C</span><span class="p">(</span><span class="s1">&#39;model_class&#39;</span><span class="p">)</span>
+<span class="n">C</span><span class="p">(</span><span class="s1">&#39;GPU&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<dl class="method">
+<dt id="batchflow.named_expr.C.get">
+<code class="sig-name descname">get</code><span class="sig-paren">(</span><em class="sig-param">batch=None</em>, <em class="sig-param">pipeline=None</em>, <em class="sig-param">model=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/batchflow/named_expr.html#C.get"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#batchflow.named_expr.C.get" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a value of a pipeline config</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="batchflow.named_expr.C.assign">
+<code class="sig-name descname">assign</code><span class="sig-paren">(</span><em class="sig-param">value</em>, <em class="sig-param">batch=None</em>, <em class="sig-param">pipeline=None</em>, <em class="sig-param">model=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/batchflow/named_expr.html#C.assign"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#batchflow.named_expr.C.assign" title="Permalink to this definition">¶</a></dt>
+<dd><p>Assign a value to a pipeline config</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="batchflow.named_expr.F">
+<em class="property">class </em><code class="sig-name descname">F</code><span class="sig-paren">(</span><em class="sig-param">name</em>, <em class="sig-param">*args</em>, <em class="sig-param">mode='w'</em>, <em class="sig-param">_pass=True</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/batchflow/named_expr.html#F"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#batchflow.named_expr.F" title="Permalink to this definition">¶</a></dt>
+<dd><p>A function, method or any other callable that takes a batch or a pipeline and possibly other arguments</p>
+<p class="rubric">Examples</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">F</span><span class="p">(</span><span class="n">MyBatch</span><span class="o">.</span><span class="n">rotate</span><span class="p">,</span> <span class="n">angle</span><span class="o">=</span><span class="mi">30</span><span class="p">)</span>
+<span class="n">F</span><span class="p">(</span><span class="n">prepare_data</span><span class="p">,</span> <span class="mi">115</span><span class="p">,</span> <span class="n">item</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+</pre></div>
+</div>
+<dl class="method">
+<dt id="batchflow.named_expr.F.get">
+<code class="sig-name descname">get</code><span class="sig-paren">(</span><em class="sig-param">batch=None</em>, <em class="sig-param">pipeline=None</em>, <em class="sig-param">model=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/batchflow/named_expr.html#F.get"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#batchflow.named_expr.F.get" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a value from a callable</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="batchflow.named_expr.F.assign">
+<code class="sig-name descname">assign</code><span class="sig-paren">(</span><em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/batchflow/named_expr.html#F.assign"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#batchflow.named_expr.F.assign" title="Permalink to this definition">¶</a></dt>
+<dd><p>Assign a value by calling a callable</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="batchflow.named_expr.L">
+<em class="property">class </em><code class="sig-name descname">L</code><span class="sig-paren">(</span><em class="sig-param">name</em>, <em class="sig-param">*args</em>, <em class="sig-param">mode='w'</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/batchflow/named_expr.html#L"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#batchflow.named_expr.L" title="Permalink to this definition">¶</a></dt>
+<dd><p>A function, method or any other callable</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="batchflow.named_expr.V">
+<em class="property">class </em><code class="sig-name descname">V</code><span class="sig-paren">(</span><em class="sig-param">name</em>, <em class="sig-param">mode='w'</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/batchflow/named_expr.html#V"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#batchflow.named_expr.V" title="Permalink to this definition">¶</a></dt>
+<dd><p>Pipeline variable name</p>
+<p class="rubric">Examples</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">V</span><span class="p">(</span><span class="s1">&#39;model_name&#39;</span><span class="p">)</span>
+<span class="n">V</span><span class="p">(</span><span class="s1">&#39;loss_history&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<dl class="method">
+<dt id="batchflow.named_expr.V.get">
+<code class="sig-name descname">get</code><span class="sig-paren">(</span><em class="sig-param">batch=None</em>, <em class="sig-param">pipeline=None</em>, <em class="sig-param">model=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/batchflow/named_expr.html#V.get"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#batchflow.named_expr.V.get" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a value of a pipeline variable</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="batchflow.named_expr.V.assign">
+<code class="sig-name descname">assign</code><span class="sig-paren">(</span><em class="sig-param">value</em>, <em class="sig-param">batch=None</em>, <em class="sig-param">pipeline=None</em>, <em class="sig-param">model=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/batchflow/named_expr.html#V.assign"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#batchflow.named_expr.V.assign" title="Permalink to this definition">¶</a></dt>
+<dd><p>Assign a value to a pipeline variable</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="batchflow.named_expr.D">
+<em class="property">class </em><code class="sig-name descname">D</code><span class="sig-paren">(</span><em class="sig-param">name</em>, <em class="sig-param">mode='w'</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/batchflow/named_expr.html#D"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#batchflow.named_expr.D" title="Permalink to this definition">¶</a></dt>
+<dd><p>Dataset attribute</p>
+<p class="rubric">Examples</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">D</span><span class="p">(</span><span class="s1">&#39;classes&#39;</span><span class="p">)</span>
+<span class="n">D</span><span class="p">(</span><span class="s1">&#39;organization&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<dl class="method">
+<dt id="batchflow.named_expr.D.get">
+<code class="sig-name descname">get</code><span class="sig-paren">(</span><em class="sig-param">batch=None</em>, <em class="sig-param">pipeline=None</em>, <em class="sig-param">model=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/batchflow/named_expr.html#D.get"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#batchflow.named_expr.D.get" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a value of a dataset attribute</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="batchflow.named_expr.D.assign">
+<code class="sig-name descname">assign</code><span class="sig-paren">(</span><em class="sig-param">value</em>, <em class="sig-param">batch=None</em>, <em class="sig-param">pipeline=None</em>, <em class="sig-param">model=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/batchflow/named_expr.html#D.assign"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#batchflow.named_expr.D.assign" title="Permalink to this definition">¶</a></dt>
+<dd><p>Assign a value to a dataset attribute</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="batchflow.named_expr.R">
+<em class="property">class </em><code class="sig-name descname">R</code><span class="sig-paren">(</span><em class="sig-param">name</em>, <em class="sig-param">*args</em>, <em class="sig-param">state=None</em>, <em class="sig-param">seed=None</em>, <em class="sig-param">size=None</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/batchflow/named_expr.html#R"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#batchflow.named_expr.R" title="Permalink to this definition">¶</a></dt>
+<dd><p>A random value</p>
+<p class="rubric">Notes</p>
+<p>If <cite>size</cite> is needed, it should be specified as a named, not a positional argument.</p>
+<p class="rubric">Examples</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">R</span><span class="p">(</span><span class="s1">&#39;normal&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
+<span class="n">R</span><span class="p">(</span><span class="s1">&#39;poisson&#39;</span><span class="p">,</span> <span class="n">lam</span><span class="o">=</span><span class="mf">5.5</span><span class="p">,</span> <span class="n">seed</span><span class="o">=</span><span class="mi">42</span><span class="p">,</span> <span class="n">size</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+<span class="n">R</span><span class="p">([</span><span class="s1">&#39;metro&#39;</span><span class="p">,</span> <span class="s1">&#39;taxi&#39;</span><span class="p">,</span> <span class="s1">&#39;bike&#39;</span><span class="p">],</span> <span class="n">p</span><span class="o">=</span><span class="p">[</span><span class="o">.</span><span class="mi">6</span><span class="p">,</span> <span class="o">.</span><span class="mi">1</span><span class="p">,</span> <span class="o">.</span><span class="mi">3</span><span class="p">],</span> <span class="n">size</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+</pre></div>
+</div>
+<dl class="method">
+<dt id="batchflow.named_expr.R.get">
+<code class="sig-name descname">get</code><span class="sig-paren">(</span><em class="sig-param">batch=None</em>, <em class="sig-param">pipeline=None</em>, <em class="sig-param">model=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/batchflow/named_expr.html#R.get"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#batchflow.named_expr.R.get" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a value of a random variable</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="batchflow.named_expr.R.assign">
+<code class="sig-name descname">assign</code><span class="sig-paren">(</span><em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/batchflow/named_expr.html#R.assign"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#batchflow.named_expr.R.assign" title="Permalink to this definition">¶</a></dt>
+<dd><p>Assign a value</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="batchflow.named_expr.P">
+<em class="property">class </em><code class="sig-name descname">P</code><span class="sig-paren">(</span><em class="sig-param">name</em>, <em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/batchflow/named_expr.html#P"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#batchflow.named_expr.P" title="Permalink to this definition">¶</a></dt>
+<dd><p>A wrapper for parallel actions</p>
+<p class="rubric">Examples</p>
+<p>Each image in the batch will be rotated at its own angle:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pipeline</span>
+    <span class="o">.</span><span class="n">rotate</span><span class="p">(</span><span class="n">angle</span><span class="o">=</span><span class="n">P</span><span class="p">(</span><span class="n">R</span><span class="p">(</span><span class="s1">&#39;normal&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">)))</span>
+</pre></div>
+</div>
+<p>Without <code class="docutils literal notranslate"><span class="pre">P</span></code> all images in the batch will be rotated at the same angle,
+as an angle randomized across batches only:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pipeline</span>
+    <span class="o">.</span><span class="n">rotate</span><span class="p">(</span><span class="n">angle</span><span class="o">=</span><span class="n">R</span><span class="p">(</span><span class="s1">&#39;normal&#39;</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>Generate 3 categorical random samples for each batch item:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">pipeline</span>
+    <span class="o">.</span><span class="n">calc_route</span><span class="p">(</span><span class="n">P</span><span class="p">(</span><span class="n">R</span><span class="p">([</span><span class="s1">&#39;metro&#39;</span><span class="p">,</span> <span class="s1">&#39;taxi&#39;</span><span class="p">,</span> <span class="s1">&#39;bike&#39;</span><span class="p">],</span> <span class="n">p</span><span class="o">=</span><span class="p">[</span><span class="o">.</span><span class="mi">6</span><span class="p">,</span> <span class="mf">0.1</span><span class="p">,</span> <span class="mf">0.3</span><span class="p">],</span> <span class="n">size</span><span class="o">=</span><span class="mi">3</span><span class="p">))</span>
+</pre></div>
+</div>
+<p class="rubric">Notes</p>
+<p>As P-wrapper is often used for <code class="docutils literal notranslate"><span class="pre">R</span></code>-expressions, <code class="docutils literal notranslate"><span class="pre">R</span></code> can be omitted for brevity.
+So <code class="docutils literal notranslate"><span class="pre">P('normal',</span> <span class="pre">0,</span> <span class="pre">1))</span></code> is equivalent to <code class="docutils literal notranslate"><span class="pre">P(R('normal',</span> <span class="pre">0,</span> <span class="pre">1)))</span></code>, but a bit shorter.</p>
+<dl class="method">
+<dt id="batchflow.named_expr.P.get">
+<code class="sig-name descname">get</code><span class="sig-paren">(</span><em class="sig-param">batch=None</em>, <em class="sig-param">pipeline=None</em>, <em class="sig-param">model=None</em>, <em class="sig-param">parallel=False</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/batchflow/named_expr.html#P.get"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#batchflow.named_expr.P.get" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a wrapped named expression</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="batchflow.sampler.html" title="Sampler"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="batchflow.pipeline.html" title="Pipeline"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">BatchFlow 0.3.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="batchflow.html" >API</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="batchflow.core.html" >batchflow</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2017, Analysis Center.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.1.0.
+    </div>
+  </body>
+</html>

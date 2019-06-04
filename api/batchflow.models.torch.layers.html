@@ -1,0 +1,554 @@
+
+
+<!doctype html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>batchflow.models.torch.layers &#8212; BatchFlow 0.3.0 documentation</title>
+    <link rel="stylesheet" href="../_static/bizstyle.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="../_static/bizstyle.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="batchflow.research" href="batchflow.research.html" />
+    <link rel="prev" title="batchflow.models.torch" href="batchflow.models.torch.html" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <!--[if lt IE 9]>
+    <script type="text/javascript" src="_static/css3-mediaqueries.js"></script>
+    <![endif]-->
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="batchflow.research.html" title="batchflow.research"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="batchflow.models.torch.html" title="batchflow.models.torch"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">BatchFlow 0.3.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="batchflow.html" >API</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="batchflow.models.html" >batchflow.models</a> &#187;</li>
+          <li class="nav-item nav-item-3"><a href="batchflow.models.torch.html" accesskey="U">batchflow.models.torch</a> &#187;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="batchflow.models.torch.html"
+                        title="previous chapter">batchflow.models.torch</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="batchflow.research.html"
+                        title="next chapter">batchflow.research</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/api/batchflow.models.torch.layers.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="module-batchflow.models.torch.layers">
+<span id="batchflow-models-torch-layers"></span><h1>batchflow.models.torch.layers<a class="headerlink" href="#module-batchflow.models.torch.layers" title="Permalink to this headline">¶</a></h1>
+<p>Contains custom PyTorch layers</p>
+<dl class="class">
+<dt id="batchflow.models.torch.layers.Activation">
+<em class="property">class </em><code class="sig-name descname">Activation</code><span class="sig-paren">(</span><em class="sig-param">activation</em>, <em class="sig-param">*args</em>, <em class="sig-param">inputs=None</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/batchflow/models/torch/layers/core.html#Activation"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#batchflow.models.torch.layers.Activation" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.nn.modules.module.Module</span></code></p>
+<p>A proxy activation module</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>activation</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)"><em>str</em></a><em>, </em><em>nn.Module</em><em>, </em><em>callable</em><em> or </em><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.7)"><em>None</em></a>) – <p>an activation function, can be</p>
+<ul>
+<li><p>None - for identity function <cite>f(x) = x</cite></p></li>
+<li><p>str - a name from <cite>torch.nn</cite></p></li>
+<li><p>an instance of activation module (e.g. <cite>torch.nn.ReLU()</cite> or <cite>torch.nn.ELU(alpha=2.0)</cite>)</p></li>
+<li><p>a class of activation module (e.g. <cite>torch.nn.ReLU</cite> or <cite>torch.nn.ELU</cite>)</p></li>
+<li><p>a callable (e.g. <cite>F.relu</cite> or your custom function)</p></li>
+</ul>
+</p></li>
+<li><p><strong>args</strong> – <p>custom positional arguments passed to</p>
+<ul>
+<li><p>a module class when creating a function</p></li>
+<li><p>a callable during forward pass</p></li>
+</ul>
+</p></li>
+<li><p><strong>kwargs</strong> – custom named arguments</p></li>
+</ul>
+</dd>
+</dl>
+<dl class="method">
+<dt id="batchflow.models.torch.layers.Activation.forward">
+<code class="sig-name descname">forward</code><span class="sig-paren">(</span><em class="sig-param">x</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/batchflow/models/torch/layers/core.html#Activation.forward"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#batchflow.models.torch.layers.Activation.forward" title="Permalink to this definition">¶</a></dt>
+<dd><p>Make forward pass</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="batchflow.models.torch.layers.AdaptivePool">
+<em class="property">class </em><code class="sig-name descname">AdaptivePool</code><span class="sig-paren">(</span><em class="sig-param">op='max'</em>, <em class="sig-param">inputs=None</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/batchflow/models/torch/layers/core.html#AdaptivePool"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#batchflow.models.torch.layers.AdaptivePool" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">batchflow.models.torch.layers.core._Pool</span></code></p>
+<p>Multi-dimensional adaptive pooling layer</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="batchflow.models.torch.layers.BatchNorm">
+<em class="property">class </em><code class="sig-name descname">BatchNorm</code><span class="sig-paren">(</span><em class="sig-param">inputs=None</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/batchflow/models/torch/layers/core.html#BatchNorm"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#batchflow.models.torch.layers.BatchNorm" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.nn.modules.module.Module</span></code></p>
+<p>Multi-dimensional batch normalization layer</p>
+<dl class="method">
+<dt id="batchflow.models.torch.layers.BatchNorm.forward">
+<code class="sig-name descname">forward</code><span class="sig-paren">(</span><em class="sig-param">x</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/batchflow/models/torch/layers/core.html#BatchNorm.forward"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#batchflow.models.torch.layers.BatchNorm.forward" title="Permalink to this definition">¶</a></dt>
+<dd><p>Defines the computation performed at every call.</p>
+<p>Should be overridden by all subclasses.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Although the recipe for forward pass needs to be defined within
+this function, one should call the <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code> instance afterwards
+instead of this since the former takes care of running the
+registered hooks while the latter silently ignores them.</p>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="batchflow.models.torch.layers.Conv">
+<em class="property">class </em><code class="sig-name descname">Conv</code><span class="sig-paren">(</span><em class="sig-param">filters</em>, <em class="sig-param">kernel_size</em>, <em class="sig-param">stride=None</em>, <em class="sig-param">strides=None</em>, <em class="sig-param">padding='same'</em>, <em class="sig-param">dilation=None</em>, <em class="sig-param">dilation_rate=None</em>, <em class="sig-param">groups=None</em>, <em class="sig-param">bias=True</em>, <em class="sig-param">inputs=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/batchflow/models/torch/layers/core.html#Conv"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#batchflow.models.torch.layers.Conv" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">batchflow.models.torch.layers.core._Conv</span></code></p>
+<p>Multi-dimensional convolutional layer</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="batchflow.models.torch.layers.ConvBlock">
+<em class="property">class </em><code class="sig-name descname">ConvBlock</code><span class="sig-paren">(</span><em class="sig-param">inputs=None</em>, <em class="sig-param">layout=''</em>, <em class="sig-param">filters=None</em>, <em class="sig-param">kernel_size=3</em>, <em class="sig-param">strides=1</em>, <em class="sig-param">padding='same'</em>, <em class="sig-param">dilation_rate=1</em>, <em class="sig-param">depth_multiplier=1</em>, <em class="sig-param">activation='relu'</em>, <em class="sig-param">pool_size=2</em>, <em class="sig-param">pool_strides=2</em>, <em class="sig-param">dropout_rate=0</em>, <em class="sig-param">units=None</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/batchflow/models/torch/layers/conv_block.html#ConvBlock"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#batchflow.models.torch.layers.ConvBlock" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.nn.modules.module.Module</span></code></p>
+<p>Complex multi-dimensional block with a sequence of convolutions, batch normalization, activation, pooling,
+dropout, dense and other layers.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>layout</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)"><em>str</em></a>) – <p>a sequence of operations:</p>
+<ul>
+<li><p>c - convolution</p></li>
+<li><p>t - transposed convolution</p></li>
+<li><p>C - separable convolution</p></li>
+<li><p>T - separable transposed convolution</p></li>
+<li><p>f - dense (fully connected)</p></li>
+<li><p>n - batch normalization</p></li>
+<li><p>a - activation</p></li>
+<li><p>p - pooling (default is max-pooling)</p></li>
+<li><p>v - average pooling</p></li>
+<li><p>P - global pooling (default is max-pooling)</p></li>
+<li><p>V - global average pooling</p></li>
+<li><p>d - dropout</p></li>
+<li><p>D - alpha dropout</p></li>
+<li><p>X - upsample with subpixel convolution (<code class="xref py py-func docutils literal notranslate"><span class="pre">SubPixelConv()</span></code>)</p></li>
+</ul>
+<p>Default is ‘’.</p>
+</p></li>
+<li><p><strong>filters</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.7)"><em>int</em></a>) – the number of filters in the output tensor</p></li>
+<li><p><strong>kernel_size</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.7)"><em>int</em></a>) – kernel size</p></li>
+<li><p><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)"><em>str</em></a>) – name of the layer that will be used as a scope.</p></li>
+<li><p><strong>units</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.7)"><em>int</em></a>) – the number of units in the dense layer</p></li>
+<li><p><strong>strides</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.7)"><em>int</em></a>) – Default is 1.</p></li>
+<li><p><strong>padding</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)"><em>str</em></a><em> or </em><a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.7)"><em>int</em></a>) – padding mode, can be ‘same’ or ‘valid’. Default - ‘same’,</p></li>
+<li><p><strong>dilation_rate</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.7)"><em>int</em></a>) – Default is 1.</p></li>
+<li><p><strong>depth_multipler</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.7)"><em>int</em></a>) – Filters factor for separable convolutions</p></li>
+<li><p><strong>activation</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)"><em>str</em></a><em> or </em><em>callable</em>) – Default is ‘relu’.</p></li>
+<li><p><strong>pool_size</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.7)"><em>int</em></a>) – Default is 2.</p></li>
+<li><p><strong>pool_strides</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.7)"><em>int</em></a>) – Default is 2.</p></li>
+<li><p><strong>pool_op</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)"><em>str</em></a>) – pooling operation (‘max’, ‘mean’, ‘frac’)</p></li>
+<li><p><strong>dropout_rate</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.7)"><em>float</em></a>) – Default is 0.</p></li>
+<li><p><strong>units</strong> – number of neurons in dense layers</p></li>
+<li><p><strong>factor</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.7)"><em>int</em></a><em> or </em><em>tuple of int</em>) – upsampling factor</p></li>
+<li><p><strong>shape</strong> (<em>tuple of int</em>) – a shape to upsample to</p></li>
+<li><p><strong>inputs</strong> (<em>torch.Tensor</em><em>, </em><em>torch.nn.Module</em><em>, </em><a class="reference external" href="https://docs.scipy.org/doc/numpy/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.16)"><em>numpy.ndarray</em></a><em> or </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.7)"><em>tuple</em></a>) – shape or an example of input tensor to infer shape</p></li>
+<li><p><strong>dense</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.7)"><em>dict</em></a>) – common parameters for dense layers, like initializers, regularalizers, etc</p></li>
+<li><p><strong>conv</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.7)"><em>dict</em></a>) – common parameters for convolution layers, like initializers, regularalizers, etc</p></li>
+<li><p><strong>transposed_conv</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.7)"><em>dict</em></a>) – common parameters for transposed conv layers, like initializers, regularalizers, etc</p></li>
+<li><p><strong>batch_norm</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.7)"><em>dict</em></a><em> or </em><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.7)"><em>None</em></a>) – common parameters for batch normalization layers, like momentum, intiializers, etc</p></li>
+<li><p><strong>pooling</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.7)"><em>dict</em></a>) – common parameters for pooling layers, like initializers, regularalizers, etc</p></li>
+<li><p><strong>dropout</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.7)"><em>dict</em></a><em> or </em><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.7)"><em>None</em></a>) – common parameters for dropout layers, like noise_shape, etc</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>torch.nn.Module</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>When <code class="docutils literal notranslate"><span class="pre">layout</span></code> includes several layers of the same type, each one can have its own parameters,
+if corresponding args are passed as lists (not tuples).</p>
+<p>Spaces may be used to improve readability.</p>
+<p>If common layer parameters (dense, conv, etc) is set to False or includes a key ‘disable’ set to True,
+all the layers of that type will be excluded whatsoever.</p>
+<p>Such a feature comes in handy for analyzing various model architectures and configurations
+(see <a class="reference internal" href="batchflow.research.html#batchflow.research.Research" title="batchflow.research.Research"><code class="xref py py-class docutils literal notranslate"><span class="pre">Research</span></code></a>).</p>
+<p class="rubric">Examples</p>
+<p>A simple block: 3x3 conv, batch norm, relu, 2x2 max-pooling with stride 2:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">x</span> <span class="o">=</span> <span class="n">ConvBlock</span><span class="p">(</span><span class="s1">&#39;cnap&#39;</span><span class="p">,</span> <span class="n">filters</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span> <span class="n">kernel_size</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">inputs</span><span class="o">=</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">28</span><span class="p">,</span> <span class="mi">28</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>A canonical bottleneck block (1x1, 3x3, 1x1 conv with relu in-between):</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">x</span> <span class="o">=</span> <span class="n">conv_block</span><span class="p">(</span><span class="s1">&#39;nac nac nac&#39;</span><span class="p">,</span> <span class="p">[</span><span class="mi">64</span><span class="p">,</span> <span class="mi">64</span><span class="p">,</span> <span class="mi">256</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">inputs</span><span class="o">=</span><span class="n">images_tensor</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>A complex Nd block:</p>
+<ul class="simple">
+<li><p>5x5 conv with 32 filters</p></li>
+<li><p>relu</p></li>
+<li><p>3x3 conv with 32 filters</p></li>
+<li><p>relu</p></li>
+<li><p>3x3 conv with 64 filters and a spatial stride 2</p></li>
+<li><p>relu</p></li>
+<li><p>batch norm</p></li>
+<li><p>dropout with rate 0.15</p></li>
+</ul>
+<p>A simple block with disabled batch-norms to test self-normalization:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">x</span> <span class="o">=</span> <span class="n">conv_block</span><span class="p">(</span><span class="s1">&#39;cna cna cna&#39;</span><span class="p">,</span> <span class="n">filters</span><span class="o">=</span><span class="p">[</span><span class="mi">64</span><span class="p">,</span> <span class="mi">128</span><span class="p">,</span> <span class="mi">256</span><span class="p">],</span> <span class="n">kernel_size</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">activation</span><span class="o">=</span><span class="s1">&#39;selu&#39;</span><span class="p">,</span> <span class="n">batch_norm</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+               <span class="n">inputs</span><span class="o">=</span><span class="n">previous_layer</span><span class="p">)</span>
+</pre></div>
+</div>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">x</span> <span class="o">=</span> <span class="n">conv_block</span><span class="p">(</span><span class="s1">&#39;ca ca ca nd&#39;</span><span class="p">,</span> <span class="p">[</span><span class="mi">32</span><span class="p">,</span> <span class="mi">32</span><span class="p">,</span> <span class="mi">64</span><span class="p">],</span> <span class="p">[</span><span class="mi">5</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span> <span class="n">strides</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="n">dropout_rate</span><span class="o">=.</span><span class="mi">15</span><span class="p">,</span> <span class="n">inputs</span><span class="o">=</span><span class="n">prev_layer</span><span class="p">)</span>
+</pre></div>
+</div>
+<dl class="method">
+<dt id="batchflow.models.torch.layers.ConvBlock.forward">
+<code class="sig-name descname">forward</code><span class="sig-paren">(</span><em class="sig-param">x</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/batchflow/models/torch/layers/conv_block.html#ConvBlock.forward"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#batchflow.models.torch.layers.ConvBlock.forward" title="Permalink to this definition">¶</a></dt>
+<dd><p>Make forward pass</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="batchflow.models.torch.layers.ConvTranspose">
+<em class="property">class </em><code class="sig-name descname">ConvTranspose</code><span class="sig-paren">(</span><em class="sig-param">filters</em>, <em class="sig-param">kernel_size</em>, <em class="sig-param">stride=None</em>, <em class="sig-param">strides=None</em>, <em class="sig-param">padding='same'</em>, <em class="sig-param">dilation=None</em>, <em class="sig-param">dilation_rate=None</em>, <em class="sig-param">groups=None</em>, <em class="sig-param">bias=True</em>, <em class="sig-param">inputs=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/batchflow/models/torch/layers/core.html#ConvTranspose"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#batchflow.models.torch.layers.ConvTranspose" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">batchflow.models.torch.layers.core._Conv</span></code></p>
+<p>Multi-dimensional transposed convolutional layer</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="batchflow.models.torch.layers.Dense">
+<em class="property">class </em><code class="sig-name descname">Dense</code><span class="sig-paren">(</span><em class="sig-param">units=None</em>, <em class="sig-param">out_features=None</em>, <em class="sig-param">bias=True</em>, <em class="sig-param">inputs=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/batchflow/models/torch/layers/core.html#Dense"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#batchflow.models.torch.layers.Dense" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.nn.modules.module.Module</span></code></p>
+<p>A dense layer</p>
+<dl class="method">
+<dt id="batchflow.models.torch.layers.Dense.forward">
+<code class="sig-name descname">forward</code><span class="sig-paren">(</span><em class="sig-param">x</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/batchflow/models/torch/layers/core.html#Dense.forward"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#batchflow.models.torch.layers.Dense.forward" title="Permalink to this definition">¶</a></dt>
+<dd><p>Make forward pass</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="batchflow.models.torch.layers.Dropout">
+<em class="property">class </em><code class="sig-name descname">Dropout</code><span class="sig-paren">(</span><em class="sig-param">inputs=None</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/batchflow/models/torch/layers/core.html#Dropout"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#batchflow.models.torch.layers.Dropout" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.nn.modules.module.Module</span></code></p>
+<p>Multi-dimensional dropout layer</p>
+<dl class="method">
+<dt id="batchflow.models.torch.layers.Dropout.forward">
+<code class="sig-name descname">forward</code><span class="sig-paren">(</span><em class="sig-param">x</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/batchflow/models/torch/layers/core.html#Dropout.forward"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#batchflow.models.torch.layers.Dropout.forward" title="Permalink to this definition">¶</a></dt>
+<dd><p>Defines the computation performed at every call.</p>
+<p>Should be overridden by all subclasses.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Although the recipe for forward pass needs to be defined within
+this function, one should call the <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code> instance afterwards
+instead of this since the former takes care of running the
+registered hooks while the latter silently ignores them.</p>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="batchflow.models.torch.layers.Flatten">
+<em class="property">class </em><code class="sig-name descname">Flatten</code><span class="sig-paren">(</span><em class="sig-param">inputs=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/batchflow/models/torch/layers/core.html#Flatten"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#batchflow.models.torch.layers.Flatten" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.nn.modules.module.Module</span></code></p>
+<p>A module which reshapes inputs into 2-dimension (batch_items, features)</p>
+<dl class="method">
+<dt id="batchflow.models.torch.layers.Flatten.forward">
+<code class="sig-name descname">forward</code><span class="sig-paren">(</span><em class="sig-param">x</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/batchflow/models/torch/layers/core.html#Flatten.forward"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#batchflow.models.torch.layers.Flatten.forward" title="Permalink to this definition">¶</a></dt>
+<dd><p>Defines the computation performed at every call.</p>
+<p>Should be overridden by all subclasses.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Although the recipe for forward pass needs to be defined within
+this function, one should call the <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code> instance afterwards
+instead of this since the former takes care of running the
+registered hooks while the latter silently ignores them.</p>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="batchflow.models.torch.layers.GlobalPool">
+<em class="property">class </em><code class="sig-name descname">GlobalPool</code><span class="sig-paren">(</span><em class="sig-param">inputs=None</em>, <em class="sig-param">op='max'</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/batchflow/models/torch/layers/core.html#GlobalPool"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#batchflow.models.torch.layers.GlobalPool" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.nn.modules.module.Module</span></code></p>
+<p>Multi-dimensional global pooling layer</p>
+<dl class="method">
+<dt id="batchflow.models.torch.layers.GlobalPool.forward">
+<code class="sig-name descname">forward</code><span class="sig-paren">(</span><em class="sig-param">x</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/batchflow/models/torch/layers/core.html#GlobalPool.forward"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#batchflow.models.torch.layers.GlobalPool.forward" title="Permalink to this definition">¶</a></dt>
+<dd><p>Defines the computation performed at every call.</p>
+<p>Should be overridden by all subclasses.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Although the recipe for forward pass needs to be defined within
+this function, one should call the <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code> instance afterwards
+instead of this since the former takes care of running the
+registered hooks while the latter silently ignores them.</p>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="batchflow.models.torch.layers.Identity">
+<em class="property">class </em><code class="sig-name descname">Identity</code><span class="sig-paren">(</span><em class="sig-param">inputs=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/batchflow/models/torch/layers/core.html#Identity"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#batchflow.models.torch.layers.Identity" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.nn.modules.module.Module</span></code></p>
+<p>Module which just returns its inputs</p>
+<p class="rubric">Notes</p>
+<p>It slows training and inference so you should have a very good reason to use it.
+For instance, this could be a good option to replace some other module when debugging.</p>
+<dl class="method">
+<dt id="batchflow.models.torch.layers.Identity.forward">
+<code class="sig-name descname">forward</code><span class="sig-paren">(</span><em class="sig-param">x</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/batchflow/models/torch/layers/core.html#Identity.forward"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#batchflow.models.torch.layers.Identity.forward" title="Permalink to this definition">¶</a></dt>
+<dd><p>Defines the computation performed at every call.</p>
+<p>Should be overridden by all subclasses.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Although the recipe for forward pass needs to be defined within
+this function, one should call the <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code> instance afterwards
+instead of this since the former takes care of running the
+registered hooks while the latter silently ignores them.</p>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="batchflow.models.torch.layers.Interpolate">
+<em class="property">class </em><code class="sig-name descname">Interpolate</code><span class="sig-paren">(</span><em class="sig-param">*args</em>, <em class="sig-param">inputs=None</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/batchflow/models/torch/layers/core.html#Interpolate"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#batchflow.models.torch.layers.Interpolate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.nn.modules.module.Module</span></code></p>
+<p>Upsample inputs with a given factor</p>
+<p class="rubric">Notes</p>
+<p>This is just a wrapper around <code class="docutils literal notranslate"><span class="pre">F.interpolate</span></code>.</p>
+<p>For brevity <code class="docutils literal notranslate"><span class="pre">mode</span></code> can be specified with the first letter only: ‘n’, ‘l’, ‘b’, ‘t’.</p>
+<p>All the parameters should the specified as keyword arguments (i.e. with names and values).</p>
+<dl class="method">
+<dt id="batchflow.models.torch.layers.Interpolate.forward">
+<code class="sig-name descname">forward</code><span class="sig-paren">(</span><em class="sig-param">x</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/batchflow/models/torch/layers/core.html#Interpolate.forward"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#batchflow.models.torch.layers.Interpolate.forward" title="Permalink to this definition">¶</a></dt>
+<dd><p>Defines the computation performed at every call.</p>
+<p>Should be overridden by all subclasses.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Although the recipe for forward pass needs to be defined within
+this function, one should call the <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code> instance afterwards
+instead of this since the former takes care of running the
+registered hooks while the latter silently ignores them.</p>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="batchflow.models.torch.layers.PixelShuffle">
+<em class="property">class </em><code class="sig-name descname">PixelShuffle</code><span class="sig-paren">(</span><em class="sig-param">upscale_factor=None</em>, <em class="sig-param">inputs=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/batchflow/models/torch/layers/core.html#PixelShuffle"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#batchflow.models.torch.layers.PixelShuffle" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.nn.modules.pixelshuffle.PixelShuffle</span></code></p>
+<p>Resize input tensor with depth to space operation</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="batchflow.models.torch.layers.Pool">
+<em class="property">class </em><code class="sig-name descname">Pool</code><span class="sig-paren">(</span><em class="sig-param">inputs=None</em>, <em class="sig-param">op='max'</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/batchflow/models/torch/layers/core.html#Pool"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#batchflow.models.torch.layers.Pool" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">batchflow.models.torch.layers.core._Pool</span></code></p>
+<p>Multi-dimensional pooling layer</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="batchflow.models.torch.layers.PyramidPooling">
+<em class="property">class </em><code class="sig-name descname">PyramidPooling</code><span class="sig-paren">(</span><em class="sig-param">inputs</em>, <em class="sig-param">layout='cna'</em>, <em class="sig-param">filters=None</em>, <em class="sig-param">kernel_size=1</em>, <em class="sig-param">pool_op='mean'</em>, <em class="sig-param">pyramid=(0</em>, <em class="sig-param">1</em>, <em class="sig-param">2</em>, <em class="sig-param">3</em>, <em class="sig-param">6)</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/batchflow/models/torch/layers/pyramid.html#PyramidPooling"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#batchflow.models.torch.layers.PyramidPooling" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.nn.modules.module.Module</span></code></p>
+<p>Pyramid Pooling module
+Zhao H. et al. “<a class="reference external" href="https://arxiv.org/abs/1612.01105">Pyramid Scene Parsing Network</a>”</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>inputs</strong> (<em>torch.Tensor</em><em>, </em><em>torch.nn.Module</em><em>, </em><a class="reference external" href="https://docs.scipy.org/doc/numpy/reference/generated/numpy.ndarray.html#numpy.ndarray" title="(in NumPy v1.16)"><em>numpy.ndarray</em></a><em> or </em><a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.7)"><em>tuple</em></a>) – shape or an example of input tensor to infer shape</p></li>
+<li><p><strong>layout</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)"><em>str</em></a>) – sequence of operations in convolution layer</p></li>
+<li><p><strong>filters</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.7)"><em>int</em></a>) – the number of filters in pyramid branches</p></li>
+<li><p><strong>kernel_size</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.7)"><em>int</em></a>) – kernel size</p></li>
+<li><p><strong>pool_op</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)"><em>str</em></a>) – a pooling operation (‘mean’ or ‘max’)</p></li>
+<li><p><strong>pyramid</strong> (<em>tuple of int</em>) – the number of feature regions in each dimension, default is (0, 1, 2, 3, 6).
+<cite>0</cite> is used to include <cite>inputs</cite> into the output tensor.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>torch.nn.Module</p>
+</dd>
+</dl>
+<dl class="method">
+<dt id="batchflow.models.torch.layers.PyramidPooling.forward">
+<code class="sig-name descname">forward</code><span class="sig-paren">(</span><em class="sig-param">x</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/batchflow/models/torch/layers/pyramid.html#PyramidPooling.forward"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#batchflow.models.torch.layers.PyramidPooling.forward" title="Permalink to this definition">¶</a></dt>
+<dd><p>Defines the computation performed at every call.</p>
+<p>Should be overridden by all subclasses.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Although the recipe for forward pass needs to be defined within
+this function, one should call the <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code> instance afterwards
+instead of this since the former takes care of running the
+registered hooks while the latter silently ignores them.</p>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="batchflow.models.torch.layers.SeparableConv">
+<em class="property">class </em><code class="sig-name descname">SeparableConv</code><span class="sig-paren">(</span><em class="sig-param">filters</em>, <em class="sig-param">kernel_size</em>, <em class="sig-param">stride=None</em>, <em class="sig-param">strides=None</em>, <em class="sig-param">padding='same'</em>, <em class="sig-param">dilation=None</em>, <em class="sig-param">dilation_rate=None</em>, <em class="sig-param">bias=True</em>, <em class="sig-param">depth_multiplier=1</em>, <em class="sig-param">inputs=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/batchflow/models/torch/layers/core.html#SeparableConv"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#batchflow.models.torch.layers.SeparableConv" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">batchflow.models.torch.layers.core._SeparableConv</span></code></p>
+<p>Multi-dimensional separable convolutional layer</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="batchflow.models.torch.layers.SeparableConvTranspose">
+<em class="property">class </em><code class="sig-name descname">SeparableConvTranspose</code><span class="sig-paren">(</span><em class="sig-param">filters</em>, <em class="sig-param">kernel_size</em>, <em class="sig-param">stride=None</em>, <em class="sig-param">strides=None</em>, <em class="sig-param">padding='same'</em>, <em class="sig-param">dilation=None</em>, <em class="sig-param">dilation_rate=None</em>, <em class="sig-param">bias=True</em>, <em class="sig-param">depth_multiplier=1</em>, <em class="sig-param">inputs=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/batchflow/models/torch/layers/core.html#SeparableConvTranspose"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#batchflow.models.torch.layers.SeparableConvTranspose" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">batchflow.models.torch.layers.core._SeparableConv</span></code></p>
+<p>Multi-dimensional transposed separable convolutional layer</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="batchflow.models.torch.layers.SubPixelConv">
+<em class="property">class </em><code class="sig-name descname">SubPixelConv</code><span class="sig-paren">(</span><em class="sig-param">upscale_factor=None</em>, <em class="sig-param">inputs=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/batchflow/models/torch/layers/core.html#SubPixelConv"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#batchflow.models.torch.layers.SubPixelConv" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">batchflow.models.torch.layers.core.PixelShuffle</span></code></p>
+<p>An alias for PixelShuffle</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="batchflow.models.torch.layers.Upsample">
+<em class="property">class </em><code class="sig-name descname">Upsample</code><span class="sig-paren">(</span><em class="sig-param">factor=2</em>, <em class="sig-param">shape=None</em>, <em class="sig-param">layout='b'</em>, <em class="sig-param">*args</em>, <em class="sig-param">inputs=None</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/batchflow/models/torch/layers/upsample.html#Upsample"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#batchflow.models.torch.layers.Upsample" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal notranslate"><span class="pre">torch.nn.modules.module.Module</span></code></p>
+<p>Upsample inputs with a given factor</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>factor</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.7)"><em>int</em></a>) – an upsamping scale</p></li>
+<li><p><strong>shape</strong> (<em>tuple of int</em>) – a shape to upsample to (used by bilinear and NN resize)</p></li>
+<li><p><strong>layout</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)"><em>str</em></a>) – <p>resizing technique, a sequence of:</p>
+<ul>
+<li><p>b - bilinear resize</p></li>
+<li><p>N - nearest neighbor resize</p></li>
+<li><p>t - transposed convolution</p></li>
+<li><p>T - separable transposed convolution</p></li>
+<li><p>X - subpixel convolution</p></li>
+</ul>
+<p>all other <code class="xref py py-class docutils literal notranslate"><span class="pre">ConvBlock</span></code> layers are also allowed.</p>
+</p></li>
+<li><p><strong>inputs</strong> – an input tensor</p></li>
+</ul>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<p>A simple bilinear upsampling:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">x</span> <span class="o">=</span> <span class="n">Upsample</span><span class="p">(</span><span class="n">layout</span><span class="o">=</span><span class="s1">&#39;b&#39;</span><span class="p">,</span> <span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="mi">256</span><span class="p">,</span> <span class="mi">256</span><span class="p">),</span> <span class="n">inputs</span><span class="o">=</span><span class="n">inputs</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Upsampling with non-linear normalized transposed convolution:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">x</span> <span class="o">=</span> <span class="n">Upsample</span><span class="p">(</span><span class="n">layout</span><span class="o">=</span><span class="s1">&#39;nat&#39;</span><span class="p">,</span> <span class="n">factor</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">kernel_size</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">inputs</span><span class="o">=</span><span class="n">inputs</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Subpixel convolution:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">x</span> <span class="o">=</span> <span class="n">Upsample</span><span class="p">(</span><span class="n">layout</span><span class="o">=</span><span class="s1">&#39;X&#39;</span><span class="p">,</span> <span class="n">factor</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">inputs</span><span class="o">=</span><span class="n">inputs</span><span class="p">)</span>
+</pre></div>
+</div>
+<dl class="method">
+<dt id="batchflow.models.torch.layers.Upsample.forward">
+<code class="sig-name descname">forward</code><span class="sig-paren">(</span><em class="sig-param">x</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/batchflow/models/torch/layers/upsample.html#Upsample.forward"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#batchflow.models.torch.layers.Upsample.forward" title="Permalink to this definition">¶</a></dt>
+<dd><p>Defines the computation performed at every call.</p>
+<p>Should be overridden by all subclasses.</p>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>Although the recipe for forward pass needs to be defined within
+this function, one should call the <code class="xref py py-class docutils literal notranslate"><span class="pre">Module</span></code> instance afterwards
+instead of this since the former takes care of running the
+registered hooks while the latter silently ignores them.</p>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="batchflow.research.html" title="batchflow.research"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="batchflow.models.torch.html" title="batchflow.models.torch"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">BatchFlow 0.3.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="batchflow.html" >API</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="batchflow.models.html" >batchflow.models</a> &#187;</li>
+          <li class="nav-item nav-item-3"><a href="batchflow.models.torch.html" >batchflow.models.torch</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2017, Analysis Center.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.1.0.
+    </div>
+  </body>
+</html>

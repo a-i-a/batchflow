@@ -1,0 +1,976 @@
+
+
+<!doctype html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>batchflow.models.torch.base &#8212; BatchFlow 0.3.0 documentation</title>
+    <link rel="stylesheet" href="../../../../_static/bizstyle.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript" id="documentation_options" data-url_root="../../../../" src="../../../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../../../_static/language_data.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="../../../../_static/bizstyle.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <!--[if lt IE 9]>
+    <script type="text/javascript" src="_static/css3-mediaqueries.js"></script>
+    <![endif]-->
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../../index.html">BatchFlow 0.3.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../../index.html" accesskey="U">Module code</a> &#187;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for batchflow.models.torch.base</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot; Cotains base class for Torch models &quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">re</span>
+<span class="kn">import</span> <span class="nn">threading</span>
+<span class="kn">from</span> <span class="nn">functools</span> <span class="k">import</span> <span class="n">partial</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">torch</span>
+<span class="kn">import</span> <span class="nn">torch.nn</span> <span class="k">as</span> <span class="nn">nn</span>
+
+<span class="kn">from</span> <span class="nn">...</span> <span class="k">import</span> <span class="n">Config</span>
+<span class="kn">from</span> <span class="nn">..</span> <span class="k">import</span> <span class="n">BaseModel</span>
+<span class="kn">from</span> <span class="nn">..utils</span> <span class="k">import</span> <span class="n">unpack_fn_from_config</span>
+<span class="kn">from</span> <span class="nn">.layers</span> <span class="k">import</span> <span class="n">ConvBlock</span>
+<span class="kn">from</span> <span class="nn">.losses</span> <span class="k">import</span> <span class="n">CrossEntropyLoss</span>
+
+
+<span class="n">LOSSES</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s1">&#39;mse&#39;</span><span class="p">:</span> <span class="n">nn</span><span class="o">.</span><span class="n">MSELoss</span><span class="p">,</span>
+    <span class="s1">&#39;bce&#39;</span><span class="p">:</span> <span class="n">nn</span><span class="o">.</span><span class="n">BCEWithLogitsLoss</span><span class="p">,</span>
+    <span class="s1">&#39;ce&#39;</span><span class="p">:</span> <span class="n">CrossEntropyLoss</span><span class="p">,</span>
+    <span class="s1">&#39;crossentropy&#39;</span><span class="p">:</span> <span class="n">CrossEntropyLoss</span><span class="p">,</span>
+    <span class="s1">&#39;absolutedifference&#39;</span><span class="p">:</span> <span class="n">nn</span><span class="o">.</span><span class="n">L1Loss</span><span class="p">,</span>
+    <span class="s1">&#39;l1&#39;</span><span class="p">:</span> <span class="n">nn</span><span class="o">.</span><span class="n">L1Loss</span><span class="p">,</span>
+    <span class="s1">&#39;cosine&#39;</span><span class="p">:</span> <span class="n">nn</span><span class="o">.</span><span class="n">CosineSimilarity</span><span class="p">,</span>
+    <span class="s1">&#39;cos&#39;</span><span class="p">:</span> <span class="n">nn</span><span class="o">.</span><span class="n">CosineSimilarity</span><span class="p">,</span>
+    <span class="s1">&#39;hinge&#39;</span><span class="p">:</span> <span class="n">nn</span><span class="o">.</span><span class="n">HingeEmbeddingLoss</span><span class="p">,</span>
+    <span class="s1">&#39;huber&#39;</span><span class="p">:</span> <span class="n">nn</span><span class="o">.</span><span class="n">SmoothL1Loss</span><span class="p">,</span>
+    <span class="s1">&#39;logloss&#39;</span><span class="p">:</span> <span class="n">CrossEntropyLoss</span><span class="p">,</span>
+<span class="p">}</span>
+
+
+<span class="n">DECAYS</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s1">&#39;exp&#39;</span><span class="p">:</span> <span class="n">torch</span><span class="o">.</span><span class="n">optim</span><span class="o">.</span><span class="n">lr_scheduler</span><span class="o">.</span><span class="n">ExponentialLR</span><span class="p">,</span>
+<span class="p">}</span>
+
+
+<div class="viewcode-block" id="TorchModel"><a class="viewcode-back" href="../../../../api/batchflow.models.torch.base.html#batchflow.models.torch.base.TorchModel">[docs]</a><span class="k">class</span> <span class="nc">TorchModel</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+    <span class="sa">r</span><span class="sd">&quot;&quot;&quot; Base class for torch models</span>
+
+<span class="sd">    **Configuration**</span>
+
+<span class="sd">    ``build`` and ``load`` are inherited from :class:`.BaseModel`.</span>
+
+<span class="sd">    device : str or torch.device</span>
+<span class="sd">        if str, a device name (e.g. &#39;cpu&#39; or &#39;cuda:0&#39;).</span>
+
+<span class="sd">    inputs : dict</span>
+<span class="sd">        model inputs (see :meth:`~.TorchModel._make_inputs`)</span>
+
+<span class="sd">    loss - a loss function, might be defined in one of three formats:</span>
+<span class="sd">        - name</span>
+<span class="sd">        - tuple (name, args)</span>
+<span class="sd">        - dict {&#39;name&#39;: name, \**args}</span>
+
+<span class="sd">        where name might be one of:</span>
+<span class="sd">            - short name (`&#39;mse&#39;`, `&#39;ce&#39;`, `&#39;l1&#39;`, `&#39;cos&#39;`, `&#39;hinge&#39;`, `&#39;huber&#39;`, `&#39;logloss&#39;`, `&#39;dice&#39;`)</span>
+<span class="sd">            - a class name from `torch losses &lt;https://pytorch.org/docs/stable/nn.html#loss-functions&gt;`_</span>
+<span class="sd">              (e.g. `&#39;PoissonNLL&#39;` or `&#39;TripletMargin&#39;`)</span>
+<span class="sd">            - a module class</span>
+<span class="sd">            - callable</span>
+
+<span class="sd">        Examples:</span>
+
+<span class="sd">        - ``{&#39;loss&#39;: &#39;mse&#39;}``</span>
+<span class="sd">        - ``{&#39;loss&#39;: (&#39;KLDiv&#39;, {&#39;reduction&#39;: &#39;none&#39;})``</span>
+<span class="sd">        - ``{&#39;loss&#39;: {&#39;name&#39;: MyCustomLoss, &#39;epsilon&#39;: 1e-6}}``</span>
+<span class="sd">        - ``{&#39;loss&#39;: my_custom_loss_fn}``</span>
+
+<span class="sd">    decay - a learning rate decay algorithm might be defined in one of three formats:</span>
+<span class="sd">        - name</span>
+<span class="sd">        - tuple (name, args)</span>
+<span class="sd">        - dict {&#39;name&#39;: name, **args}</span>
+
+<span class="sd">        where name might be one of:</span>
+
+<span class="sd">        - short name (&#39;exp&#39;)</span>
+<span class="sd">        - a class name from `torch.optim.lr_scheduler</span>
+<span class="sd">          &lt;https://pytorch.org/docs/stable/optim.html#how-to-adjust-learning-rate&gt;`_</span>
+<span class="sd">          (e.g. &#39;LambdaLR&#39;)</span>
+<span class="sd">        - a class with ``_LRScheduler`` interface</span>
+<span class="sd">        - a callable which takes optimizer and optional args</span>
+
+<span class="sd">        Examples:</span>
+
+<span class="sd">        - ``{&#39;decay&#39;: &#39;exp&#39;}``</span>
+<span class="sd">        - ``{&#39;decay&#39;: (&#39;StepLR&#39;, {&#39;steps_size&#39;: 10000})}``</span>
+<span class="sd">        - ``{&#39;decay&#39;: {&#39;name&#39;: MyCustomDecay, &#39;decay_rate&#39;: .5}``</span>
+
+<span class="sd">    optimizer - an optimizer might be defined in one of three formats:</span>
+<span class="sd">            - name</span>
+<span class="sd">            - tuple (name, args)</span>
+<span class="sd">            - dict {&#39;name&#39;: name, \**args}</span>
+
+<span class="sd">            where name might be one of:</span>
+
+<span class="sd">            - short name (e.g. &#39;Adam&#39;, &#39;Adagrad&#39;, any optimizer from</span>
+<span class="sd">              `torch.optim &lt;https://pytorch.org/docs/stable/optim.html#algorithms&gt;`_)</span>
+<span class="sd">            - a class with ``Optimizer`` interface</span>
+<span class="sd">            - a callable which takes model parameters and optional args.</span>
+
+<span class="sd">        Examples:</span>
+
+<span class="sd">        - ``{&#39;optimizer&#39;: &#39;Adam&#39;}``</span>
+<span class="sd">        - ``{&#39;optimizer&#39;: (&#39;SparseAdam&#39;, {&#39;lr&#39;: 0.01})}``</span>
+<span class="sd">        - ``{&#39;optimizer&#39;: {&#39;name&#39;: &#39;Adagrad&#39;, &#39;initial_accumulator_value&#39;: 0.01}``</span>
+<span class="sd">        - ``{&#39;optimizer&#39;: {&#39;name&#39;: MyCustomOptimizer, momentum=0.95}}``</span>
+
+<span class="sd">    microbatch : int</span>
+<span class="sd">        make forward/backward pass with microbatches of a given size, but apply gradients after the whole batch.</span>
+<span class="sd">        Batch size should be evenly divisible by microbatch size.</span>
+
+<span class="sd">    common : dict</span>
+<span class="sd">        default parameters for all blocks (see :class:`.ConvBlock`)</span>
+
+<span class="sd">    initial_block : dict or nn.Module</span>
+<span class="sd">        a user-defined module or parameters for the input block, usually :class:`.ConvBlock` parameters.</span>
+
+<span class="sd">        The only required parameter here is ``initial_block/inputs`` which should contain a name or</span>
+<span class="sd">        a list of names from ``inputs`` which tensors will be passed to ``initial_block`` as ``inputs``.</span>
+
+<span class="sd">        Examples:</span>
+
+<span class="sd">        - ``{&#39;initial_block/inputs&#39;: &#39;images&#39;}``</span>
+<span class="sd">        - ``{&#39;initial_block&#39;: dict(inputs=&#39;features&#39;)}``</span>
+<span class="sd">        - ``{&#39;initial_block&#39;: dict(inputs=&#39;images&#39;, layout=&#39;nac nac&#39;, filters=64, kernel_size=[7, 3], strides=[1, 2])}``</span>
+<span class="sd">        - ``{&#39;initial_block&#39;: MyCustomModule(some_param=1, another_param=2)}``</span>
+
+<span class="sd">    body : dict or nn.Module</span>
+<span class="sd">        a user-defined module or parameters for the base network layers, usually :class:`.ConvBlock` parameters</span>
+
+<span class="sd">    head : dict or nn.Module</span>
+<span class="sd">        a user-defined module or parameters for the head layers, usually :class:`.ConvBlock` parameters</span>
+
+<span class="sd">    predictions : str or callable</span>
+<span class="sd">        an operation applied to the head output to make the predictions tensor which is used in the loss function.</span>
+
+<span class="sd">    output : dict or list</span>
+<span class="sd">        auxiliary operations</span>
+
+<span class="sd">    For more details about predictions and auxiliary output operations see :meth:`.TorchModel.output`.</span>
+
+<span class="sd">    **How to create your own model**</span>
+
+<span class="sd">    #. Take a look at :class:`~.ConvBlock` since it is widely used as a building block almost everywhere.</span>
+
+<span class="sd">    #. Define model defaults (e.g. number of filters, batch normalization options, etc)</span>
+<span class="sd">       by overriding :meth:`.TorchModel.default_config`.</span>
+<span class="sd">       Or skip it and hard code all the parameters in unpredictable places without the possibility to</span>
+<span class="sd">       change them easily through model&#39;s config.</span>
+
+<span class="sd">    #. Define build configuration (e.g. number of classes, etc)</span>
+<span class="sd">       by overriding :meth:`~.TorchModel.build_config`.</span>
+
+<span class="sd">    #. Override :meth:`~.TorchModel.initial_block`, :meth:`~.TorchModel.body` and :meth:`~.TorchModel.head`, if needed.</span>
+<span class="sd">       In many cases defaults and build config are just enough to build a network without additional code writing.</span>
+
+<span class="sd">    Things worth mentioning:</span>
+
+<span class="sd">    #. Input data and its parameters should be defined in configuration under ``inputs`` key.</span>
+<span class="sd">       See :meth:`.TorchModel._make_inputs` for details.</span>
+
+<span class="sd">    #. You might want to use a convenient multidimensional :class:`.ConvBlock`,</span>
+<span class="sd">       as well as other predefined layers from ``dataset.models.torch.layers``.</span>
+<span class="sd">       Of course, you can use usual `Torch layers &lt;https://pytorch.org/docs/stable/nn.html&gt;`_.</span>
+
+<span class="sd">    #. In many cases there is no need to write a loss function, learning rate decay and optimizer</span>
+<span class="sd">       as they might be defined through config.</span>
+
+<span class="sd">    #. For a configured loss to work one of the inputs should have a name ``targets`` and</span>
+<span class="sd">       the model output is considered ``predictions``.</span>
+<span class="sd">       They will be passed to a loss function.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_train_lock</span> <span class="o">=</span> <span class="n">threading</span><span class="o">.</span><span class="n">Lock</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">device</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">loss_fn</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">lr_decay</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">optimizer</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_inputs</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">predictions</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">loss</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">microbatch</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_full_config</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="fm">__init__</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+<div class="viewcode-block" id="TorchModel.build"><a class="viewcode-back" href="../../../../api/batchflow.models.torch.base.html#batchflow.models.torch.base.TorchModel.build">[docs]</a>    <span class="k">def</span> <span class="nf">build</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Build the model &quot;&quot;&quot;</span>
+        <span class="n">config</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">build_config</span><span class="p">()</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_full_config</span> <span class="o">=</span> <span class="n">config</span>
+
+        <span class="k">if</span> <span class="s1">&#39;device&#39;</span> <span class="ow">in</span> <span class="n">config</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">device</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;device&#39;</span><span class="p">])</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">_build</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">loss_fn</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_make_loss</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">optimizer</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_make_optimizer</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">microbatch</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;microbatch&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="TorchModel._make_inputs"><a class="viewcode-back" href="../../../../api/batchflow.models.torch.base.html#batchflow.models.torch.base.TorchModel._make_inputs">[docs]</a>    <span class="k">def</span> <span class="nf">_make_inputs</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">names</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Create model input data from config provided</span>
+
+<span class="sd">        **Configuration**</span>
+
+<span class="sd">        inputs : dict</span>
+<span class="sd">            - key : str</span>
+<span class="sd">                a placeholder name</span>
+<span class="sd">            - values : dict or tuple</span>
+<span class="sd">                each input&#39;s config</span>
+
+<span class="sd">        Input config:</span>
+
+<span class="sd">        ``dtype`` : str or torch.dtype (by default &#39;float32&#39;)</span>
+<span class="sd">            data type</span>
+
+<span class="sd">        ``shape`` : int, tuple, list or None (default)</span>
+<span class="sd">            a tensor shape which includes the number of channels/classes and doesn&#39;t include a batch size.</span>
+
+<span class="sd">        ``classes`` : int, array-like or None (default)</span>
+<span class="sd">            an array of class labels if data labels are strings or anything else except ``np.arange(num_classes)``</span>
+
+<span class="sd">        ``data_format`` : str {&#39;channels_first&#39;, &#39;channels_last&#39;} or {&#39;f&#39;, &#39;l&#39;}</span>
+<span class="sd">            The ordering of the dimensions in the inputs. Default is &#39;channels_last&#39;.</span>
+<span class="sd">            For brevity ``data_format`` may be shortened to ``df``.</span>
+
+<span class="sd">        ``name`` : str</span>
+<span class="sd">            a name for the transformed and reshaped tensor.</span>
+
+<span class="sd">        If an input config is a tuple, it should contain all items exactly in the order shown above:</span>
+<span class="sd">        dtype, shape, classes, data_format, transform, name.</span>
+<span class="sd">        If an item is None, the default value will be used instead.</span>
+
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        names : list</span>
+<span class="sd">            tensor names that are expected in the config&#39;s &#39;inputs&#39; section</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        KeyError if there is any name missing in the config&#39;s &#39;inputs&#39; section.</span>
+<span class="sd">        ValueError if there are duplicate names.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">config</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;inputs&#39;</span><span class="p">)</span>
+
+        <span class="n">names</span> <span class="o">=</span> <span class="n">names</span> <span class="ow">or</span> <span class="p">[]</span>
+        <span class="n">missing_names</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">names</span><span class="p">)</span> <span class="o">-</span> <span class="nb">set</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">missing_names</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="s2">&quot;Inputs should contain </span><span class="si">{}</span><span class="s2"> names&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">missing_names</span><span class="p">))</span>
+
+        <span class="n">placeholder_names</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">config</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+        <span class="n">tensor_names</span> <span class="o">=</span> <span class="nb">set</span><span class="p">(</span><span class="n">x</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;name&#39;</span><span class="p">)</span> <span class="k">for</span> <span class="n">x</span> <span class="ow">in</span> <span class="n">config</span><span class="o">.</span><span class="n">values</span><span class="p">()</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span> <span class="ow">and</span> <span class="n">x</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;name&#39;</span><span class="p">))</span>
+        <span class="n">wrong_names</span> <span class="o">=</span> <span class="n">placeholder_names</span> <span class="o">&amp;</span> <span class="n">tensor_names</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">wrong_names</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s1">&#39;Inputs contain duplicate names:&#39;</span><span class="p">,</span> <span class="n">wrong_names</span><span class="p">)</span>
+
+        <span class="n">param_names</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;dtype&#39;</span><span class="p">,</span> <span class="s1">&#39;shape&#39;</span><span class="p">,</span> <span class="s1">&#39;classes&#39;</span><span class="p">,</span> <span class="s1">&#39;transform&#39;</span><span class="p">,</span> <span class="s1">&#39;name&#39;</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">input_name</span><span class="p">,</span> <span class="n">input_config</span> <span class="ow">in</span> <span class="n">config</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">input_config</span><span class="p">,</span> <span class="p">(</span><span class="nb">tuple</span><span class="p">,</span> <span class="nb">list</span><span class="p">)):</span>
+                <span class="n">input_config</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">input_config</span><span class="p">)</span> <span class="o">+</span> <span class="p">[</span><span class="kc">None</span> <span class="k">for</span> <span class="n">_</span> <span class="ow">in</span> <span class="n">param_names</span><span class="p">]</span>
+                <span class="n">input_config</span> <span class="o">=</span> <span class="n">input_config</span><span class="p">[:</span><span class="nb">len</span><span class="p">(</span><span class="n">param_names</span><span class="p">)]</span>
+                <span class="n">input_config</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="nb">zip</span><span class="p">(</span><span class="n">param_names</span><span class="p">,</span> <span class="n">input_config</span><span class="p">))</span>
+                <span class="n">input_config</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">((</span><span class="n">k</span><span class="p">,</span> <span class="n">v</span><span class="p">)</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">input_config</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">v</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">)</span>
+
+            <span class="n">shape</span> <span class="o">=</span> <span class="n">input_config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;shape&#39;</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">shape</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+                <span class="n">shape</span> <span class="o">=</span> <span class="p">(</span><span class="n">shape</span><span class="p">,)</span>
+            <span class="k">if</span> <span class="n">shape</span><span class="p">:</span>
+                <span class="n">input_config</span><span class="p">[</span><span class="s1">&#39;shape&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">tuple</span><span class="p">([</span><span class="kc">None</span><span class="p">]</span> <span class="o">+</span> <span class="nb">list</span><span class="p">(</span><span class="n">shape</span><span class="p">))</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">_inputs</span><span class="p">[</span><span class="n">input_name</span><span class="p">]</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">config</span><span class="o">=</span><span class="n">input_config</span><span class="p">)</span>
+
+        <span class="c1"># add default aliases</span>
+        <span class="k">if</span> <span class="s1">&#39;targets&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">config</span><span class="p">:</span>
+            <span class="k">if</span> <span class="s1">&#39;labels&#39;</span> <span class="ow">in</span> <span class="n">config</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_inputs</span><span class="p">[</span><span class="s1">&#39;targets&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_inputs</span><span class="p">[</span><span class="s1">&#39;labels&#39;</span><span class="p">]</span>
+            <span class="k">elif</span> <span class="s1">&#39;masks&#39;</span> <span class="ow">in</span> <span class="n">config</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_inputs</span><span class="p">[</span><span class="s1">&#39;targets&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_inputs</span><span class="p">[</span><span class="s1">&#39;masks&#39;</span><span class="p">]</span></div>
+
+    <span class="k">def</span> <span class="nf">_make_loss</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">):</span>
+        <span class="n">loss</span><span class="p">,</span> <span class="n">args</span> <span class="o">=</span> <span class="n">unpack_fn_from_config</span><span class="p">(</span><span class="s1">&#39;loss&#39;</span><span class="p">,</span> <span class="n">config</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">loss</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="n">loss</span> <span class="o">=</span> <span class="n">LOSSES</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s1">&#39;[-_ ]&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">loss</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">(),</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">loss</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">nn</span><span class="p">,</span> <span class="n">loss</span><span class="p">):</span>
+            <span class="n">loss</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">nn</span><span class="p">,</span> <span class="n">loss</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">loss</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">nn</span><span class="p">,</span> <span class="n">loss</span> <span class="o">+</span> <span class="s2">&quot;Loss&quot;</span><span class="p">):</span>
+            <span class="n">loss</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">nn</span><span class="p">,</span> <span class="n">loss</span> <span class="o">+</span> <span class="s2">&quot;Loss&quot;</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">loss</span><span class="p">,</span> <span class="nb">type</span><span class="p">):</span>
+            <span class="k">pass</span>
+        <span class="k">elif</span> <span class="n">callable</span><span class="p">(</span><span class="n">loss</span><span class="p">):</span>
+            <span class="n">loss</span> <span class="o">=</span> <span class="k">lambda</span> <span class="o">**</span><span class="n">a</span><span class="p">:</span> <span class="n">partial</span><span class="p">(</span><span class="n">loss</span><span class="p">,</span> <span class="o">**</span><span class="n">args</span><span class="p">)</span>
+            <span class="n">args</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Loss is not defined in the model </span><span class="si">%s</span><span class="s2">&quot;</span> <span class="o">%</span> <span class="bp">self</span><span class="o">.</span><span class="vm">__class__</span><span class="o">.</span><span class="vm">__name__</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">loss_fn</span> <span class="o">=</span> <span class="n">loss</span><span class="p">(</span><span class="o">**</span><span class="n">args</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_make_optimizer</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">):</span>
+        <span class="n">optimizer_name</span><span class="p">,</span> <span class="n">optimizer_args</span> <span class="o">=</span> <span class="n">unpack_fn_from_config</span><span class="p">(</span><span class="s1">&#39;optimizer&#39;</span><span class="p">,</span> <span class="n">config</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">optimizer_name</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">callable</span><span class="p">(</span><span class="n">optimizer_name</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">optimizer_name</span><span class="p">,</span> <span class="nb">type</span><span class="p">):</span>
+            <span class="k">pass</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">optimizer_name</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">optim</span><span class="p">,</span> <span class="n">optimizer_name</span><span class="p">):</span>
+            <span class="n">optimizer_name</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">optim</span><span class="p">,</span> <span class="n">optimizer_name</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Unknown optimizer&quot;</span><span class="p">,</span> <span class="n">optimizer_name</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">optimizer_name</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">optimizer</span> <span class="o">=</span> <span class="n">optimizer_name</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">parameters</span><span class="p">(),</span> <span class="o">**</span><span class="n">optimizer_args</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Optimizer is not defined&quot;</span><span class="p">,</span> <span class="n">optimizer_name</span><span class="p">)</span>
+
+        <span class="n">decay_name</span><span class="p">,</span> <span class="n">decay_args</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_make_decay</span><span class="p">(</span><span class="n">config</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">decay_name</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">lr_decay</span> <span class="o">=</span> <span class="n">decay_name</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">optimizer</span><span class="p">,</span> <span class="o">**</span><span class="n">decay_args</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_make_decay</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="p">):</span>
+        <span class="n">decay_name</span><span class="p">,</span> <span class="n">decay_args</span> <span class="o">=</span> <span class="n">unpack_fn_from_config</span><span class="p">(</span><span class="s1">&#39;decay&#39;</span><span class="p">,</span> <span class="n">config</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">decay_name</span> <span class="ow">is</span> <span class="kc">None</span> <span class="ow">or</span> <span class="n">callable</span><span class="p">(</span><span class="n">decay_name</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">decay_name</span><span class="p">,</span> <span class="nb">type</span><span class="p">):</span>
+            <span class="k">pass</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">decay_name</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="ow">and</span> <span class="nb">hasattr</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">optim</span><span class="o">.</span><span class="n">lr_scheduler</span><span class="p">,</span> <span class="n">decay_name</span><span class="p">):</span>
+            <span class="n">decay_name</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">optim</span><span class="o">.</span><span class="n">lr_scheduler</span><span class="p">,</span> <span class="n">decay_name</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">decay_name</span> <span class="ow">in</span> <span class="n">DECAYS</span><span class="p">:</span>
+            <span class="n">decay_name</span> <span class="o">=</span> <span class="n">DECAYS</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">re</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s1">&#39;[-_ ]&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">decay_name</span><span class="p">)</span><span class="o">.</span><span class="n">lower</span><span class="p">(),</span> <span class="kc">None</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Unknown learning rate decay method&quot;</span><span class="p">,</span> <span class="n">decay_name</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">decay_name</span><span class="p">,</span> <span class="n">decay_args</span>
+
+<div class="viewcode-block" id="TorchModel.get_tensor_config"><a class="viewcode-back" href="../../../../api/batchflow.models.torch.base.html#batchflow.models.torch.base.TorchModel.get_tensor_config">[docs]</a>    <span class="k">def</span> <span class="nf">get_tensor_config</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tensor</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Return tensor configuration &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">tensor</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_inputs</span><span class="p">[</span><span class="n">tensor</span><span class="p">][</span><span class="s1">&#39;config&#39;</span><span class="p">]</span>
+        <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;tensor is expected to be a name for config&#39;s inputs section&quot;</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TorchModel.shape"><a class="viewcode-back" href="../../../../api/batchflow.models.torch.base.html#batchflow.models.torch.base.TorchModel.shape">[docs]</a>    <span class="k">def</span> <span class="nf">shape</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tensor</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Return the tensor&#39;s shape &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">tensor</span><span class="p">,</span> <span class="p">(</span><span class="nb">list</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">)):</span>
+            <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_tensor_config</span><span class="p">(</span><span class="n">t</span><span class="p">)[</span><span class="s1">&#39;shape&#39;</span><span class="p">]</span> <span class="k">for</span> <span class="n">t</span> <span class="ow">in</span> <span class="n">tensor</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_tensor_config</span><span class="p">(</span><span class="n">tensor</span><span class="p">)[</span><span class="s1">&#39;shape&#39;</span><span class="p">]</span></div>
+
+<div class="viewcode-block" id="TorchModel.num_channels"><a class="viewcode-back" href="../../../../api/batchflow.models.torch.base.html#batchflow.models.torch.base.TorchModel.num_channels">[docs]</a>    <span class="k">def</span> <span class="nf">num_channels</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tensor</span><span class="p">,</span> <span class="n">data_format</span><span class="o">=</span><span class="s1">&#39;channels_first&#39;</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Return number of channels in the input tensor &quot;&quot;&quot;</span>
+        <span class="n">shape</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">tensor</span><span class="p">)</span>
+        <span class="n">axis</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">channels_axis</span><span class="p">(</span><span class="n">data_format</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">shape</span><span class="p">[</span><span class="n">axis</span><span class="p">]</span></div>
+
+<div class="viewcode-block" id="TorchModel.spatial_dim"><a class="viewcode-back" href="../../../../api/batchflow.models.torch.base.html#batchflow.models.torch.base.TorchModel.spatial_dim">[docs]</a>    <span class="k">def</span> <span class="nf">spatial_dim</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tensor</span><span class="p">):</span>
+        <span class="n">shape</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">tensor</span><span class="p">)</span>
+        <span class="k">return</span> <span class="nb">len</span><span class="p">(</span><span class="n">shape</span><span class="p">)</span> <span class="o">-</span> <span class="mi">2</span></div>
+
+
+<div class="viewcode-block" id="TorchModel.channels_axis"><a class="viewcode-back" href="../../../../api/batchflow.models.torch.base.html#batchflow.models.torch.base.TorchModel.channels_axis">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">channels_axis</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">data_format</span><span class="o">=</span><span class="s1">&#39;channels_first&#39;</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Return the channels axis for the tensor</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        data_format : str {&#39;channels_last&#39;, &#39;channels_first&#39;, &#39;N***&#39;} or None</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        int</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">data_format</span> <span class="o">=</span> <span class="n">data_format</span> <span class="k">if</span> <span class="n">data_format</span> <span class="k">else</span> <span class="s1">&#39;channels_first&#39;</span>
+
+        <span class="k">return</span> <span class="mi">1</span> <span class="k">if</span> <span class="n">data_format</span> <span class="o">==</span> <span class="s2">&quot;channels_first&quot;</span> <span class="ow">or</span> <span class="n">data_format</span><span class="o">.</span><span class="n">startswith</span><span class="p">(</span><span class="s2">&quot;NC&quot;</span><span class="p">)</span> <span class="k">else</span> <span class="o">-</span><span class="mi">1</span></div>
+
+<div class="viewcode-block" id="TorchModel.has_classes"><a class="viewcode-back" href="../../../../api/batchflow.models.torch.base.html#batchflow.models.torch.base.TorchModel.has_classes">[docs]</a>    <span class="k">def</span> <span class="nf">has_classes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tensor</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Check if a tensor has classes defined in the config &quot;&quot;&quot;</span>
+        <span class="n">config</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_tensor_config</span><span class="p">(</span><span class="n">tensor</span><span class="p">)</span>
+        <span class="n">has</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;classes&#39;</span><span class="p">)</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span>
+        <span class="k">return</span> <span class="n">has</span></div>
+
+<div class="viewcode-block" id="TorchModel.classes"><a class="viewcode-back" href="../../../../api/batchflow.models.torch.base.html#batchflow.models.torch.base.TorchModel.classes">[docs]</a>    <span class="k">def</span> <span class="nf">classes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tensor</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Return the  number of classes &quot;&quot;&quot;</span>
+        <span class="n">config</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_tensor_config</span><span class="p">(</span><span class="n">tensor</span><span class="p">)</span>
+        <span class="n">classes</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;classes&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">classes</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="n">classes</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">np</span><span class="o">.</span><span class="n">asarray</span><span class="p">(</span><span class="n">classes</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TorchModel.num_classes"><a class="viewcode-back" href="../../../../api/batchflow.models.torch.base.html#batchflow.models.torch.base.TorchModel.num_classes">[docs]</a>    <span class="k">def</span> <span class="nf">num_classes</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tensor</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Return the number of classes &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">has_classes</span><span class="p">(</span><span class="n">tensor</span><span class="p">):</span>
+            <span class="n">classes</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">classes</span><span class="p">(</span><span class="n">tensor</span><span class="p">)</span>
+            <span class="k">return</span> <span class="n">classes</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">classes</span><span class="p">,</span> <span class="nb">int</span><span class="p">)</span> <span class="k">else</span> <span class="nb">len</span><span class="p">(</span><span class="n">classes</span><span class="p">)</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_channels</span><span class="p">(</span><span class="n">tensor</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TorchModel.default_config"><a class="viewcode-back" href="../../../../api/batchflow.models.torch.base.html#batchflow.models.torch.base.TorchModel.default_config">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">default_config</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Define model defaults</span>
+
+<span class="sd">        You need to override this method if you expect your model or its blocks to serve as a base for other models</span>
+<span class="sd">        (e.g. VGG for FCN, ResNet for LinkNet, etc).</span>
+
+<span class="sd">        Put here all constants (like the number of filters, kernel sizes, block layouts, strides, etc)</span>
+<span class="sd">        specific to the model, but independent of anything else (like image shapes, number of classes, etc).</span>
+
+<span class="sd">        These defaults can be changed in :meth:`~.TorchModel.build_config` or when calling :meth:`.Pipeline.init_model`.</span>
+
+<span class="sd">        Usually, it looks like::</span>
+
+<span class="sd">            @classmethod</span>
+<span class="sd">            def default_config(cls):</span>
+<span class="sd">                config = TorchModel.default_config()</span>
+<span class="sd">                config[&#39;initial_block&#39;] = dict(layout=&#39;cnap&#39;, filters=16, kernel_size=7, strides=2,</span>
+<span class="sd">                                               pool_size=3, pool_strides=2)</span>
+<span class="sd">                config[&#39;body/filters&#39;] = 32</span>
+<span class="sd">                config[&#39;head&#39;] = dict(layout=&#39;cnadV&#39;, dropout_rate=.2)</span>
+<span class="sd">                return config</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">config</span> <span class="o">=</span> <span class="n">Config</span><span class="p">()</span>
+        <span class="n">config</span><span class="p">[</span><span class="s1">&#39;inputs&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">config</span><span class="p">[</span><span class="s1">&#39;common&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">config</span><span class="p">[</span><span class="s1">&#39;initial_block&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">config</span><span class="p">[</span><span class="s1">&#39;body&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">config</span><span class="p">[</span><span class="s1">&#39;head&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="n">config</span><span class="p">[</span><span class="s1">&#39;predictions&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">config</span><span class="p">[</span><span class="s1">&#39;output&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+        <span class="n">config</span><span class="p">[</span><span class="s1">&#39;optimizer&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">(</span><span class="s1">&#39;Adam&#39;</span><span class="p">,</span> <span class="nb">dict</span><span class="p">())</span>
+        <span class="n">config</span><span class="p">[</span><span class="s1">&#39;microbatch&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="kc">None</span>
+
+        <span class="k">return</span> <span class="n">config</span></div>
+
+<div class="viewcode-block" id="TorchModel.get_defaults"><a class="viewcode-back" href="../../../../api/batchflow.models.torch.base.html#batchflow.models.torch.base.TorchModel.get_defaults">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">get_defaults</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Fill block params from default config and kwargs &quot;&quot;&quot;</span>
+        <span class="n">config</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">default_config</span><span class="p">()</span>
+        <span class="n">_config</span> <span class="o">=</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">name</span><span class="p">)</span>
+        <span class="n">kwargs</span> <span class="o">=</span> <span class="n">kwargs</span> <span class="ow">or</span> <span class="p">{}</span>
+        <span class="n">config</span> <span class="o">=</span> <span class="p">{</span><span class="o">**</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;common&#39;</span><span class="p">],</span> <span class="o">**</span><span class="n">_config</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">}</span>
+        <span class="k">return</span> <span class="n">config</span></div>
+
+<div class="viewcode-block" id="TorchModel.build_config"><a class="viewcode-back" href="../../../../api/batchflow.models.torch.base.html#batchflow.models.torch.base.TorchModel.build_config">[docs]</a>    <span class="k">def</span> <span class="nf">build_config</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">names</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Define a model architecture configuration</span>
+
+<span class="sd">        It takes just 2 steps:</span>
+
+<span class="sd">        #. Define names for input data and make input tensors by calling ``super().build_config(names)``.</span>
+
+<span class="sd">           If the model config does not contain any name from ``names``, :exc:`KeyError` is raised.</span>
+
+<span class="sd">           See :meth:`._TorchModel.make_inputs` for details.</span>
+
+<span class="sd">        #. Define parameters for :meth:`~.TorchModel.initial_block`, :meth:`~.TorchModel.body`,</span>
+<span class="sd">           :meth:`~.TorchModel.head` which depend on inputs.</span>
+
+<span class="sd">        #. Don&#39;t forget to return ``config``.</span>
+
+<span class="sd">        Typically it looks like this::</span>
+
+<span class="sd">            def build_config(self, names=None):</span>
+<span class="sd">                names = names or [&#39;images&#39;, &#39;labels&#39;]</span>
+<span class="sd">                config = super().build_config(names)</span>
+<span class="sd">                config[&#39;head/num_classes&#39;] = self.num_classes(&#39;targets&#39;)</span>
+<span class="sd">                return config</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">config</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">default_config</span><span class="p">()</span>
+        <span class="n">config</span> <span class="o">=</span> <span class="n">config</span> <span class="o">+</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span>
+
+        <span class="k">if</span> <span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;inputs&#39;</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_make_inputs</span><span class="p">(</span><span class="n">names</span><span class="p">,</span> <span class="n">config</span><span class="p">)</span>
+            <span class="n">inputs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;initial_block/inputs&#39;</span><span class="p">,</span> <span class="n">config</span><span class="p">)</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+                <span class="n">config</span><span class="p">[</span><span class="s1">&#39;common/data_format&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="s1">&#39;inputs&#39;</span><span class="p">][</span><span class="n">inputs</span><span class="p">]</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;data_format&#39;</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">config</span></div>
+
+    <span class="k">def</span> <span class="nf">_add_block</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">blocks</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">inputs</span><span class="p">):</span>
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">config</span><span class="p">[</span><span class="n">name</span><span class="p">],</span> <span class="n">nn</span><span class="o">.</span><span class="n">Module</span><span class="p">):</span>
+            <span class="n">block</span> <span class="o">=</span> <span class="n">config</span><span class="p">[</span><span class="n">name</span><span class="p">]</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">config</span><span class="p">[</span><span class="n">name</span><span class="p">],</span> <span class="nb">dict</span><span class="p">):</span>
+            <span class="n">block</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">name</span><span class="p">)(</span><span class="n">inputs</span><span class="o">=</span><span class="n">inputs</span><span class="p">,</span> <span class="o">**</span><span class="p">{</span><span class="o">**</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;common&#39;</span><span class="p">],</span> <span class="o">**</span><span class="n">config</span><span class="p">[</span><span class="n">name</span><span class="p">]})</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;block can be configured as a Module or a dict with parameters&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">block</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">blocks</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">block</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">block</span>
+
+    <span class="k">def</span> <span class="nf">_build</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">config</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="n">initial_inputs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;initial_block/inputs&#39;</span><span class="p">])</span>
+        <span class="n">config</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;initial_block/inputs&#39;</span><span class="p">)</span>
+
+        <span class="n">blocks</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">initial_block</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_add_block</span><span class="p">(</span><span class="n">blocks</span><span class="p">,</span> <span class="s1">&#39;initial_block&#39;</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">initial_inputs</span><span class="p">)</span>
+        <span class="n">body</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_add_block</span><span class="p">(</span><span class="n">blocks</span><span class="p">,</span> <span class="s1">&#39;body&#39;</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">initial_block</span> <span class="ow">or</span> <span class="n">initial_inputs</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_add_block</span><span class="p">(</span><span class="n">blocks</span><span class="p">,</span> <span class="s1">&#39;head&#39;</span><span class="p">,</span> <span class="n">config</span><span class="p">,</span> <span class="n">body</span> <span class="ow">or</span> <span class="n">initial_block</span> <span class="ow">or</span> <span class="n">initial_inputs</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="o">=</span> <span class="n">nn</span><span class="o">.</span><span class="n">Sequential</span><span class="p">(</span><span class="o">*</span><span class="n">blocks</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
+
+<div class="viewcode-block" id="TorchModel.initial_block"><a class="viewcode-back" href="../../../../api/batchflow.models.torch.base.html#batchflow.models.torch.base.TorchModel.initial_block">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">initial_block</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Transform inputs with a convolution block</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        For parameters see :class:`.ConvBlock`.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        torch.nn.Module or None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">kwargs</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">get_defaults</span><span class="p">(</span><span class="s1">&#39;initial_block&#39;</span><span class="p">,</span> <span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;layout&#39;</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">ConvBlock</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">None</span></div>
+
+<div class="viewcode-block" id="TorchModel.body"><a class="viewcode-back" href="../../../../api/batchflow.models.torch.base.html#batchflow.models.torch.base.TorchModel.body">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">body</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Base layers which produce a network embedding</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        For parameters see :class:`.ConvBlock`.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        torch.nn.Module or None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">kwargs</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">get_defaults</span><span class="p">(</span><span class="s1">&#39;body&#39;</span><span class="p">,</span> <span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;layout&#39;</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">ConvBlock</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">None</span></div>
+
+<div class="viewcode-block" id="TorchModel.head"><a class="viewcode-back" href="../../../../api/batchflow.models.torch.base.html#batchflow.models.torch.base.TorchModel.head">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">head</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; The last network layers which produce predictions</span>
+
+<span class="sd">        Notes</span>
+<span class="sd">        -----</span>
+<span class="sd">        For parameters see :class:`.ConvBlock`.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        torch.nn.Module or None</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">kwargs</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">get_defaults</span><span class="p">(</span><span class="s1">&#39;head&#39;</span><span class="p">,</span> <span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;layout&#39;</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">ConvBlock</span><span class="p">(</span><span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">return</span> <span class="kc">None</span></div>
+
+<div class="viewcode-block" id="TorchModel.output"><a class="viewcode-back" href="../../../../api/batchflow.models.torch.base.html#batchflow.models.torch.base.TorchModel.output">[docs]</a>    <span class="k">def</span> <span class="nf">output</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">,</span> <span class="n">predictions</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">ops</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">prefix</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Add output operations to the model, like predicted probabilities or labels, etc.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        inputs : torch.Tensor or a sequence of torch.Tensors</span>
+<span class="sd">            input tensors</span>
+
+<span class="sd">        predictions : str or callable</span>
+<span class="sd">            an operation applied to inputs to get `predictions` tensor which is used in a loss function:</span>
+
+<span class="sd">            - &#39;sigmoid&#39; - ``sigmoid(inputs)``</span>
+<span class="sd">            - &#39;proba&#39; - ``softmax(inputs)``</span>
+<span class="sd">            - &#39;labels&#39; - ``argmax(inputs)``</span>
+<span class="sd">            - &#39;softplus&#39; - ``softplus(inputs)``</span>
+<span class="sd">            - callable - a user-defined operation</span>
+
+<span class="sd">        ops : a sequence of operations or an ordered dict</span>
+<span class="sd">            auxiliary operations</span>
+
+<span class="sd">            If dict:</span>
+
+<span class="sd">            - key - a prefix for each input</span>
+<span class="sd">            - value - a sequence of aux operations</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        ValueError if the number of inputs does not equal to the number of prefixes</span>
+<span class="sd">        TypeError if inputs is not a Tensor or a sequence of Tensors</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+
+<span class="sd">        ::</span>
+
+<span class="sd">            config = {</span>
+<span class="sd">                &#39;output&#39;: [&#39;proba&#39;, &#39;labels&#39;]</span>
+<span class="sd">            }</span>
+
+<span class="sd">        However, if one of the placeholders also has a name &#39;labels&#39;, then it will be lost as the model</span>
+<span class="sd">        will rewrite the name &#39;labels&#39; with an output.</span>
+
+<span class="sd">        That is where a dict might be convenient::</span>
+
+<span class="sd">            config = {</span>
+<span class="sd">                &#39;output&#39;: {&#39;predicted&#39;: [&#39;proba&#39;, &#39;labels&#39;]}</span>
+<span class="sd">            }</span>
+
+<span class="sd">        Now the output will be stored under names &#39;predicted_proba&#39; and &#39;predicted_labels&#39;.</span>
+
+<span class="sd">        For multi-output models ensure that an ordered dict is used (e.g. :class:`~collections.OrderedDict`).</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">ops</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">ops</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">elif</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">ops</span><span class="p">,</span> <span class="p">(</span><span class="nb">dict</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">,</span> <span class="nb">list</span><span class="p">)):</span>
+            <span class="n">ops</span> <span class="o">=</span> <span class="p">[</span><span class="n">ops</span><span class="p">]</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">ops</span><span class="p">,</span> <span class="nb">dict</span><span class="p">):</span>
+            <span class="n">ops</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;&#39;</span><span class="p">:</span> <span class="n">ops</span><span class="p">}</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="p">(</span><span class="nb">tuple</span><span class="p">,</span> <span class="nb">list</span><span class="p">)):</span>
+            <span class="n">inputs</span> <span class="o">=</span> <span class="p">[</span><span class="n">inputs</span><span class="p">]</span>
+
+        <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">tensor</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">inputs</span><span class="p">):</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">tensor</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">):</span>
+                <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s2">&quot;Network output is expected to be a Tensor, but given </span><span class="si">{}</span><span class="s2">&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">inputs</span><span class="p">)))</span>
+
+            <span class="n">prefix</span> <span class="o">=</span> <span class="p">[</span><span class="o">*</span><span class="n">ops</span><span class="o">.</span><span class="n">keys</span><span class="p">()][</span><span class="n">i</span><span class="p">]</span>
+            <span class="n">attr_prefix</span> <span class="o">=</span> <span class="n">prefix</span> <span class="o">+</span> <span class="s1">&#39;_&#39;</span> <span class="k">if</span> <span class="n">prefix</span> <span class="k">else</span> <span class="s1">&#39;&#39;</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">_add_output_op</span><span class="p">(</span><span class="n">tensor</span><span class="p">,</span> <span class="n">predictions</span><span class="p">,</span> <span class="s1">&#39;predictions&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">oper</span> <span class="ow">in</span> <span class="n">ops</span><span class="p">[</span><span class="n">prefix</span><span class="p">]:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">_add_output_op</span><span class="p">(</span><span class="n">tensor</span><span class="p">,</span> <span class="n">oper</span><span class="p">,</span> <span class="n">oper</span><span class="p">,</span> <span class="n">attr_prefix</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+    <span class="k">def</span> <span class="nf">_add_output_op</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">,</span> <span class="n">oper</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">attr_prefix</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">oper</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_add_output_identity</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">attr_prefix</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">oper</span> <span class="o">==</span> <span class="s1">&#39;softplus&#39;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_add_output_softplus</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">attr_prefix</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">oper</span> <span class="o">==</span> <span class="s1">&#39;sigmoid&#39;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_add_output_sigmoid</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">attr_prefix</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">oper</span> <span class="o">==</span> <span class="s1">&#39;proba&#39;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_add_output_proba</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">attr_prefix</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">oper</span> <span class="o">==</span> <span class="s1">&#39;labels&#39;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_add_output_labels</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">attr_prefix</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">callable</span><span class="p">(</span><span class="n">oper</span><span class="p">):</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_add_output_callable</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">oper</span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="n">attr_prefix</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_add_output_identity</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">attr_prefix</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">_</span> <span class="o">=</span> <span class="n">kwargs</span>
+        <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attr_prefix</span> <span class="o">+</span> <span class="n">name</span><span class="p">,</span> <span class="n">inputs</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">inputs</span>
+
+    <span class="k">def</span> <span class="nf">_add_output_softplus</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">attr_prefix</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">_</span> <span class="o">=</span> <span class="n">kwargs</span>
+        <span class="n">proba</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">functional</span><span class="o">.</span><span class="n">softplus</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
+        <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attr_prefix</span> <span class="o">+</span> <span class="n">name</span><span class="p">,</span> <span class="n">proba</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_add_output_sigmoid</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">attr_prefix</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">_</span> <span class="o">=</span> <span class="n">kwargs</span>
+        <span class="n">proba</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">functional</span><span class="o">.</span><span class="n">sigmoid</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
+        <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attr_prefix</span> <span class="o">+</span> <span class="n">name</span><span class="p">,</span> <span class="n">proba</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_add_output_proba</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">attr_prefix</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">axis</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">channels_axis</span><span class="p">(</span><span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;data_format&#39;</span><span class="p">))</span>
+        <span class="n">proba</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">functional</span><span class="o">.</span><span class="n">softmax</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">dim</span><span class="o">=</span><span class="n">axis</span><span class="p">)</span>
+        <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attr_prefix</span> <span class="o">+</span> <span class="n">name</span><span class="p">,</span> <span class="n">proba</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_add_output_labels</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">attr_prefix</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">class_axis</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">channels_axis</span><span class="p">(</span><span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;data_format&#39;</span><span class="p">))</span>
+        <span class="n">predicted_classes</span> <span class="o">=</span> <span class="n">inputs</span><span class="o">.</span><span class="n">argmax</span><span class="p">(</span><span class="n">dim</span><span class="o">=</span><span class="n">class_axis</span><span class="p">)</span>
+        <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attr_prefix</span> <span class="o">+</span> <span class="n">name</span><span class="p">,</span> <span class="n">predicted_classes</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_add_output_callable</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">,</span> <span class="n">oper</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span> <span class="n">attr_prefix</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="n">_</span> <span class="o">=</span> <span class="n">kwargs</span>
+        <span class="n">x</span> <span class="o">=</span> <span class="n">oper</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="n">name</span> <span class="ow">or</span> <span class="n">oper</span><span class="o">.</span><span class="vm">__name__</span>
+        <span class="nb">setattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">attr_prefix</span> <span class="o">+</span> <span class="n">name</span><span class="p">,</span> <span class="n">x</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">x</span>
+
+    <span class="k">def</span> <span class="nf">_fill_value</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">):</span>
+        <span class="n">inputs</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">from_numpy</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">:</span>
+            <span class="n">inputs</span> <span class="o">=</span> <span class="n">inputs</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">device</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">inputs</span>
+
+    <span class="k">def</span> <span class="nf">_fill_param</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">inputs</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">inputs</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="k">pass</span>
+        <span class="k">elif</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="nb">tuple</span><span class="p">):</span>
+            <span class="n">inputs_list</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">inputs</span><span class="p">:</span>
+                <span class="n">v</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fill_value</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+                <span class="n">inputs_list</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+            <span class="n">inputs</span> <span class="o">=</span> <span class="n">inputs_list</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">inputs</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fill_value</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">inputs</span>
+
+    <span class="k">def</span> <span class="nf">_fill_input</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">):</span>
+        <span class="n">inputs</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">arg</span> <span class="ow">in</span> <span class="n">args</span><span class="p">:</span>
+            <span class="n">inputs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_fill_param</span><span class="p">(</span><span class="n">arg</span><span class="p">))</span>
+        <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">_fill_output</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">fetches</span><span class="p">):</span>
+        <span class="n">_fetches</span> <span class="o">=</span> <span class="p">[</span><span class="n">fetches</span><span class="p">]</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">fetches</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="k">else</span> <span class="n">fetches</span>
+
+        <span class="n">output</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">f</span> <span class="ow">in</span> <span class="n">_fetches</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">hasattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">f</span><span class="p">):</span>
+                <span class="n">v</span> <span class="o">=</span> <span class="nb">getattr</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">f</span><span class="p">)</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">v</span><span class="p">,</span> <span class="p">(</span><span class="n">torch</span><span class="o">.</span><span class="n">Tensor</span><span class="p">,</span> <span class="n">torch</span><span class="o">.</span><span class="n">autograd</span><span class="o">.</span><span class="n">Variable</span><span class="p">)):</span>
+                    <span class="n">v</span> <span class="o">=</span> <span class="n">v</span><span class="o">.</span><span class="n">detach</span><span class="p">()</span><span class="o">.</span><span class="n">cpu</span><span class="p">()</span><span class="o">.</span><span class="n">numpy</span><span class="p">()</span>
+                <span class="n">output</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">KeyError</span><span class="p">(</span><span class="s1">&#39;Unknown value to fetch&#39;</span><span class="p">,</span> <span class="n">f</span><span class="p">)</span>
+
+        <span class="n">output</span> <span class="o">=</span> <span class="n">output</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">fetches</span><span class="p">,</span> <span class="nb">str</span><span class="p">)</span> <span class="k">else</span> <span class="nb">type</span><span class="p">(</span><span class="n">fetches</span><span class="p">)(</span><span class="n">output</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">output</span>
+
+<div class="viewcode-block" id="TorchModel.train"><a class="viewcode-back" href="../../../../api/batchflow.models.torch.base.html#batchflow.models.torch.base.TorchModel.train">[docs]</a>    <span class="k">def</span> <span class="nf">train</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">fetches</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">use_lock</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">microbatch</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>    <span class="c1"># pylint: disable=arguments-differ</span>
+        <span class="sd">&quot;&quot;&quot; Train the model with the data provided</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        args</span>
+<span class="sd">            arguments to be passed directly into the model</span>
+
+<span class="sd">        fetches : tuple, list</span>
+<span class="sd">            a sequence of `tf.Operation` and/or `tf.Tensor` to calculate</span>
+
+<span class="sd">        use_lock : bool</span>
+<span class="sd">            if True, the whole train step is locked, thus allowing for multithreading.</span>
+
+<span class="sd">        microbatch : int or None</span>
+<span class="sd">            make forward/backward pass with microbatches of a given size, but apply gradients after the whole batch.</span>
+<span class="sd">            Batch size should be evenly divisible by microbatch size.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        Calculated values of tensors in `fetches` in the same structure</span>
+
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+
+<span class="sd">        ::</span>
+
+<span class="sd">            model.train(B(&#39;images&#39;), B(&#39;labels&#39;), fetches=&#39;loss&#39;)</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="k">if</span> <span class="n">use_lock</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_train_lock</span><span class="o">.</span><span class="n">acquire</span><span class="p">()</span>
+
+        <span class="o">*</span><span class="n">inputs</span><span class="p">,</span> <span class="n">targets</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fill_input</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">)</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">train</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">lr_decay</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">lr_decay</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="n">microbatch</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">False</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">microbatch</span> <span class="ow">is</span> <span class="kc">True</span><span class="p">:</span>
+                <span class="n">microbatch</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">microbatch</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">microbatch</span> <span class="o">=</span> <span class="n">microbatch</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">microbatch</span>
+        <span class="k">if</span> <span class="n">microbatch</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">inputs</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">%</span> <span class="n">microbatch</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">ValueError</span><span class="p">(</span><span class="s2">&quot;Inputs size should be evenly divisible by microbatch size: </span><span class="si">%d</span><span class="s2"> and </span><span class="si">%d</span><span class="s2">&quot;</span> <span class="o">%</span>
+                                 <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">inputs</span><span class="p">),</span> <span class="n">microbatch</span><span class="p">))</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">optimizer</span><span class="o">.</span><span class="n">zero_grad</span><span class="p">()</span>
+
+            <span class="n">steps</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">inputs</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span> <span class="o">//</span> <span class="n">microbatch</span>
+            <span class="n">predictions</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">inputs</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="n">microbatch</span><span class="p">):</span>
+                <span class="n">inputs_</span> <span class="o">=</span> <span class="p">[</span><span class="n">data</span><span class="p">[</span><span class="n">i</span><span class="p">:</span> <span class="n">i</span> <span class="o">+</span> <span class="n">microbatch</span><span class="p">]</span> <span class="k">for</span> <span class="n">data</span> <span class="ow">in</span> <span class="n">inputs</span><span class="p">]</span>
+                <span class="n">targets_</span> <span class="o">=</span> <span class="n">targets</span><span class="p">[</span><span class="n">i</span><span class="p">:</span> <span class="n">i</span> <span class="o">+</span> <span class="n">microbatch</span><span class="p">]</span>
+
+                <span class="n">predictions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">(</span><span class="o">*</span><span class="n">inputs_</span><span class="p">))</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">loss</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">loss_fn</span><span class="p">(</span><span class="n">predictions</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">targets_</span><span class="p">)</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">loss</span><span class="o">.</span><span class="n">backward</span><span class="p">()</span>
+
+            <span class="bp">self</span><span class="o">.</span><span class="n">optimizer</span><span class="o">.</span><span class="n">step</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">predictions</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">cat</span><span class="p">(</span><span class="n">predictions</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">loss</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">loss</span> <span class="o">/</span> <span class="n">steps</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">optimizer</span><span class="o">.</span><span class="n">zero_grad</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">predictions</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">(</span><span class="o">*</span><span class="n">inputs</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">loss</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">loss_fn</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">predictions</span><span class="p">,</span> <span class="n">targets</span><span class="p">)</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">loss</span><span class="o">.</span><span class="n">backward</span><span class="p">()</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">optimizer</span><span class="o">.</span><span class="n">step</span><span class="p">()</span>
+
+        <span class="k">if</span> <span class="n">use_lock</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">_train_lock</span><span class="o">.</span><span class="n">release</span><span class="p">()</span>
+
+        <span class="n">config</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_full_config</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">output</span><span class="p">(</span><span class="n">inputs</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">predictions</span><span class="p">,</span> <span class="n">predictions</span><span class="o">=</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;predictions&#39;</span><span class="p">],</span>
+                    <span class="n">ops</span><span class="o">=</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;output&#39;</span><span class="p">],</span> <span class="o">**</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;common&#39;</span><span class="p">])</span>
+        <span class="n">output</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fill_output</span><span class="p">(</span><span class="n">fetches</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">output</span></div>
+
+<div class="viewcode-block" id="TorchModel.predict"><a class="viewcode-back" href="../../../../api/batchflow.models.torch.base.html#batchflow.models.torch.base.TorchModel.predict">[docs]</a>    <span class="k">def</span> <span class="nf">predict</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="n">fetches</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>    <span class="c1"># pylint: disable=arguments-differ</span>
+        <span class="sd">&quot;&quot;&quot; Get predictions on the data provided</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="o">*</span><span class="n">inputs</span><span class="p">,</span> <span class="n">targets</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fill_input</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span>
+
+        <span class="k">with</span> <span class="n">torch</span><span class="o">.</span><span class="n">no_grad</span><span class="p">():</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">predictions</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">(</span><span class="o">*</span><span class="n">inputs</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">targets</span> <span class="ow">is</span> <span class="kc">None</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">loss</span> <span class="o">=</span> <span class="kc">None</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">loss</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">loss_fn</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">predictions</span><span class="p">,</span> <span class="n">targets</span><span class="p">)</span>
+
+        <span class="n">config</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_full_config</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">output</span><span class="p">(</span><span class="n">inputs</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">predictions</span><span class="p">,</span> <span class="n">predictions</span><span class="o">=</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;predictions&#39;</span><span class="p">],</span>
+                    <span class="n">ops</span><span class="o">=</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;output&#39;</span><span class="p">],</span> <span class="o">**</span><span class="n">config</span><span class="p">[</span><span class="s1">&#39;common&#39;</span><span class="p">])</span>
+        <span class="n">output</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">_fill_output</span><span class="p">(</span><span class="n">fetches</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">output</span></div>
+
+<div class="viewcode-block" id="TorchModel.save"><a class="viewcode-back" href="../../../../api/batchflow.models.torch.base.html#batchflow.models.torch.base.TorchModel.save">[docs]</a>    <span class="k">def</span> <span class="nf">save</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Save torch model.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        path : str</span>
+<span class="sd">            a path to a directory where all model files will be stored</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; torch_model = ResNet34()</span>
+
+<span class="sd">        Now save the model</span>
+
+<span class="sd">        &gt;&gt;&gt; torch_model.save(&#39;/path/to/models/resnet34&#39;)</span>
+
+<span class="sd">        The model will be saved to /path/to/models/resnet34</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">_</span> <span class="o">=</span> <span class="n">args</span><span class="p">,</span> <span class="n">kwargs</span>
+        <span class="n">dirname</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">dirname</span> <span class="ow">and</span> <span class="ow">not</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">exists</span><span class="p">(</span><span class="n">dirname</span><span class="p">):</span>
+            <span class="n">os</span><span class="o">.</span><span class="n">mkdir</span><span class="p">(</span><span class="n">dirname</span><span class="p">)</span>
+        <span class="n">torch</span><span class="o">.</span><span class="n">save</span><span class="p">({</span>
+            <span class="s1">&#39;model_state_dict&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="p">,</span>
+            <span class="s1">&#39;optimizer_state_dict&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">optimizer</span><span class="p">,</span>
+            <span class="s1">&#39;loss&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">loss_fn</span><span class="p">,</span>
+            <span class="s1">&#39;config&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="p">,</span>
+            <span class="s1">&#39;full_config&#39;</span><span class="p">:</span> <span class="bp">self</span><span class="o">.</span><span class="n">_full_config</span>
+            <span class="p">},</span> <span class="n">path</span><span class="p">)</span></div>
+
+<div class="viewcode-block" id="TorchModel.load"><a class="viewcode-back" href="../../../../api/batchflow.models.torch.base.html#batchflow.models.torch.base.TorchModel.load">[docs]</a>    <span class="k">def</span> <span class="nf">load</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">path</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="nb">eval</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Load a torch model from files</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        path : str</span>
+<span class="sd">            a directory where a model is stored</span>
+
+<span class="sd">        eval : bool</span>
+<span class="sd">            whether to switch the model to eval mode</span>
+
+<span class="sd">        Examples</span>
+<span class="sd">        --------</span>
+<span class="sd">        &gt;&gt;&gt; resnet = ResNet34(load=dict(path=&#39;/path/to/models/resnet34&#39;))</span>
+
+<span class="sd">        &gt;&gt;&gt; torch_model.load(path=&#39;/path/to/models/resnet34&#39;)</span>
+
+<span class="sd">        &gt;&gt;&gt; TorchModel(config={&#39;device&#39;: &#39;cuda:2&#39;, &#39;load/path&#39;: &#39;/path/to/models/resnet34&#39;})</span>
+
+<span class="sd">        **How to move the model to device**</span>
+
+<span class="sd">        The model will be moved to device specified in the model config by key `device`.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">_</span> <span class="o">=</span> <span class="n">args</span><span class="p">,</span> <span class="n">kwargs</span>
+        <span class="n">device</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;device&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">device</span><span class="p">:</span>
+            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">device</span><span class="p">,</span> <span class="nb">str</span><span class="p">):</span>
+                <span class="n">device</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">device</span><span class="p">(</span><span class="n">device</span><span class="p">)</span>
+            <span class="n">checkpoint</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">map_location</span><span class="o">=</span><span class="n">device</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">checkpoint</span> <span class="o">=</span> <span class="n">torch</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">model</span> <span class="o">=</span> <span class="n">checkpoint</span><span class="p">[</span><span class="s1">&#39;model_state_dict&#39;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">optimizer</span> <span class="o">=</span> <span class="n">checkpoint</span><span class="p">[</span><span class="s1">&#39;optimizer_state_dict&#39;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">loss_fn</span> <span class="o">=</span> <span class="n">checkpoint</span><span class="p">[</span><span class="s1">&#39;loss&#39;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">config</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">config</span> <span class="o">+</span> <span class="n">checkpoint</span><span class="p">[</span><span class="s1">&#39;config&#39;</span><span class="p">]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">_full_config</span> <span class="o">=</span> <span class="n">checkpoint</span><span class="p">[</span><span class="s1">&#39;full_config&#39;</span><span class="p">]</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">device</span> <span class="o">=</span> <span class="n">device</span>
+
+        <span class="k">if</span> <span class="n">device</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">to</span><span class="p">(</span><span class="n">device</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">eval</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">model</span><span class="o">.</span><span class="n">eval</span><span class="p">()</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../../index.html">BatchFlow 0.3.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../../index.html" >Module code</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2017, Analysis Center.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.1.0.
+    </div>
+  </body>
+</html>

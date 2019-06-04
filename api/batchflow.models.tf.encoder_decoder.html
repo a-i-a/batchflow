@@ -1,0 +1,429 @@
+
+
+<!doctype html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>Encoder-decoder &#8212; BatchFlow 0.3.0 documentation</title>
+    <link rel="stylesheet" href="../_static/bizstyle.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="../_static/bizstyle.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Tensorflow layers and losses" href="../intro/tf_layers.html" />
+    <link rel="prev" title="Faster RCNN" href="batchflow.models.tf.faster_rcnn.html" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <!--[if lt IE 9]>
+    <script type="text/javascript" src="_static/css3-mediaqueries.js"></script>
+    <![endif]-->
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../intro/tf_layers.html" title="Tensorflow layers and losses"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="batchflow.models.tf.faster_rcnn.html" title="Faster RCNN"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">BatchFlow 0.3.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../intro/classes.html" >Classes and capabilities</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="../intro/tf_models.html" >Tensorflow models</a> &#187;</li>
+          <li class="nav-item nav-item-3"><a href="batchflow.models.tf.models.html" accesskey="U">Models</a> &#187;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="batchflow.models.tf.faster_rcnn.html"
+                        title="previous chapter">Faster RCNN</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="../intro/tf_layers.html"
+                        title="next chapter">Tensorflow layers and losses</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/api/batchflow.models.tf.encoder_decoder.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="module-batchflow.models.tf.encoder_decoder">
+<span id="encoder-decoder"></span><h1>Encoder-decoder<a class="headerlink" href="#module-batchflow.models.tf.encoder_decoder" title="Permalink to this headline">¶</a></h1>
+<p>Encoder-decoder</p>
+<dl class="class">
+<dt id="batchflow.models.tf.encoder_decoder.EncoderDecoder">
+<em class="property">class </em><code class="sig-name descname">EncoderDecoder</code><span class="sig-paren">(</span><em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/batchflow/models/tf/encoder_decoder.html#EncoderDecoder"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#batchflow.models.tf.encoder_decoder.EncoderDecoder" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="batchflow.models.tf.base.html#batchflow.models.tf.base.TFModel" title="batchflow.models.tf.base.TFModel"><code class="xref py py-class docutils literal notranslate"><span class="pre">batchflow.models.tf.base.TFModel</span></code></a></p>
+<p>Encoder-decoder architecture. Allows to combine features of different models,
+e.g. ResNet and DenseNet, in order to create new ones with just a few lines of code.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>inputs</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.7)"><em>dict</em></a>) – Dictionary with ‘images’ (see <a class="reference internal" href="batchflow.models.tf.base.html#batchflow.models.tf.TFModel._make_inputs" title="batchflow.models.tf.TFModel._make_inputs"><code class="xref py py-meth docutils literal notranslate"><span class="pre">_make_inputs()</span></code></a>)</p></li>
+<li><p><strong>body</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.7)"><em>dict</em></a>) – <dl>
+<dt>encoder<span class="classifier">dict</span></dt><dd><dl>
+<dt>base<span class="classifier">TFModel</span></dt><dd><p>Model implementing <code class="docutils literal notranslate"><span class="pre">make_encoder</span></code> method which returns tensors
+with encoded representation of the inputs.</p>
+</dd>
+<dt>num_stages<span class="classifier">int</span></dt><dd><p>Number of downsampling stages.</p>
+</dd>
+<dt>downsample<span class="classifier">dict</span></dt><dd><p>Parameters for downsampling (see <a class="reference internal" href="batchflow.models.tf.layers.html#batchflow.models.tf.layers.conv_block" title="batchflow.models.tf.layers.conv_block"><code class="xref py py-func docutils literal notranslate"><span class="pre">conv_block()</span></code></a>)</p>
+</dd>
+<dt>blocks<span class="classifier">dict</span></dt><dd><p>Parameters for pre-processing blocks:</p>
+<dl class="simple">
+<dt>base<span class="classifier">callable</span></dt><dd><p>Tensor processing function. Default is <a class="reference internal" href="batchflow.models.tf.layers.html#batchflow.models.tf.layers.conv_block" title="batchflow.models.tf.layers.conv_block"><code class="xref py py-func docutils literal notranslate"><span class="pre">conv_block()</span></code></a>.</p>
+</dd>
+<dt>other args<span class="classifier">dict</span></dt><dd><p>Parameters for the base block.</p>
+</dd>
+</dl>
+</dd>
+<dt>other args<span class="classifier">dict</span></dt><dd><p>Parameters for <code class="docutils literal notranslate"><span class="pre">make_encoder</span></code> method.</p>
+</dd>
+</dl>
+</dd>
+<dt>embedding<span class="classifier">dict</span></dt><dd><dl class="simple">
+<dt>base<span class="classifier">callable</span></dt><dd><p>Tensor processing function. Default is <a class="reference internal" href="batchflow.models.tf.layers.html#batchflow.models.tf.layers.conv_block" title="batchflow.models.tf.layers.conv_block"><code class="xref py py-func docutils literal notranslate"><span class="pre">conv_block()</span></code></a>.</p>
+</dd>
+<dt>other args</dt><dd><p>Parameters for the base block.</p>
+</dd>
+</dl>
+</dd>
+<dt>decoder<span class="classifier">dict</span></dt><dd><dl>
+<dt>num_stages<span class="classifier">int</span></dt><dd><p>Number of upsampling blocks.</p>
+</dd>
+<dt>factor<span class="classifier">int or list of int</span></dt><dd><p>If int, the total upsampling factor for all stages combined.
+If list, upsampling factors for each stage.</p>
+</dd>
+<dt>skip<span class="classifier">bool</span></dt><dd><p>Whether to concatenate upsampled tensor with stored pre-downsample encoding.</p>
+</dd>
+<dt>upsample<span class="classifier">dict</span></dt><dd><p>Parameters for upsampling (see <a class="reference internal" href="batchflow.models.tf.layers.html#batchflow.models.tf.layers.upsample" title="batchflow.models.tf.layers.upsample"><code class="xref py py-func docutils literal notranslate"><span class="pre">upsample()</span></code></a>).</p>
+</dd>
+<dt>blocks<span class="classifier">dict</span></dt><dd><p>Parameters for post-processing blocks:</p>
+<dl class="simple">
+<dt>base<span class="classifier">callable</span></dt><dd><p>Tensor processing function. Default is <a class="reference internal" href="batchflow.models.tf.layers.html#batchflow.models.tf.layers.conv_block" title="batchflow.models.tf.layers.conv_block"><code class="xref py py-func docutils literal notranslate"><span class="pre">conv_block()</span></code></a>.</p>
+</dd>
+<dt>other args<span class="classifier">dict</span></dt><dd><p>Parameters for the base block.</p>
+</dd>
+</dl>
+</dd>
+</dl>
+</dd>
+</dl>
+</p></li>
+</ul>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<p>Use ResNet as an encoder with desired number of blocks and filters in them (total downsampling factor is 4),
+create an embedding that contains 256 channels, then upsample it to get 8 times the size of initial image.</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">config</span> <span class="o">=</span> <span class="p">{</span>
+<span class="go">        &#39;inputs&#39;: dict(images={&#39;shape&#39;: B(&#39;image_shape&#39;)},</span>
+<span class="go">                       masks={&#39;name&#39;: &#39;targets&#39;, &#39;shape&#39;: B(&#39;mask_shape&#39;)}),</span>
+<span class="go">        &#39;initial_block/inputs&#39;: &#39;images&#39;,</span>
+<span class="go">        &#39;body/encoder&#39;: {&#39;base&#39;: ResNet,</span>
+<span class="go">                         &#39;num_blocks&#39;: [2, 3, 4]</span>
+<span class="go">                         &#39;filters&#39;: [16, 32, 128]},</span>
+<span class="go">        &#39;body/embedding&#39;: {&#39;layout&#39;: &#39;cna&#39;, &#39;filters&#39;: 256},</span>
+<span class="go">        &#39;body/decoder&#39;: {&#39;num_stages&#39;: 5, &#39;factor&#39;: 32},</span>
+<span class="go">    }</span>
+</pre></div>
+</div>
+<p>Preprocess input image with 7x7 convolutions, downsample it 5 times with DenseNet blocks in between,
+use MobileNet block in the bottom, then restore original image size with subpixel convolutions and
+ResNeXt blocks in between:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="gp">&gt;&gt;&gt; </span><span class="n">config</span> <span class="o">=</span> <span class="p">{</span>
+<span class="go">        &#39;inputs&#39;: dict(images={&#39;shape&#39;: B(&#39;image_shape&#39;)},</span>
+<span class="go">                       masks={&#39;name&#39;: &#39;targets&#39;, &#39;shape&#39;: B(&#39;mask_shape&#39;)}),</span>
+<span class="go">        &#39;initial_block&#39;: {&#39;inputs&#39;: &#39;images&#39;,</span>
+<span class="go">                          &#39;layout&#39;: &#39;cna&#39;, &#39;filters&#39;: 4, &#39;kernel_size&#39;: 7},</span>
+<span class="go">        &#39;body/encoder&#39;: {&#39;num_stages&#39;: 5,</span>
+<span class="go">                         &#39;blocks&#39;: {&#39;base&#39;: DenseNet.block,</span>
+<span class="go">                                    &#39;num_layers&#39;: [2, 2, 3, 4, 5],</span>
+<span class="go">                                    &#39;growth_rate&#39;: 6, &#39;skip&#39;: True}},</span>
+<span class="go">        &#39;body/embedding&#39;: {&#39;base&#39;: MobileNet.block,</span>
+<span class="go">                           &#39;width_factor&#39;: 2},</span>
+<span class="go">        &#39;body/decoder&#39;: {&#39;upsample&#39;: {&#39;layout&#39;: &#39;X&#39;},</span>
+<span class="go">                         &#39;blocks&#39;: {&#39;base&#39;: ResNet.block,</span>
+<span class="go">                                    &#39;filters&#39;: [256, 128, 64, 32, 16],</span>
+<span class="go">                                    &#39;resnext&#39;: True}},</span>
+<span class="go">    }</span>
+</pre></div>
+</div>
+<p class="rubric">Notes</p>
+<p>When <cite>base</cite> is used for decoder creation, downsampling is done one less time than
+the length of <cite>filters</cite> (or other size-defining parameter) list in the <cite>encoder</cite> configuration.
+That is due to the fact that the first block is used as preprocessing of input tensors.</p>
+<dl class="method">
+<dt id="batchflow.models.tf.encoder_decoder.EncoderDecoder.default_config">
+<em class="property">classmethod </em><code class="sig-name descname">default_config</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/batchflow/models/tf/encoder_decoder.html#EncoderDecoder.default_config"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#batchflow.models.tf.encoder_decoder.EncoderDecoder.default_config" title="Permalink to this definition">¶</a></dt>
+<dd><p>Define model defaults</p>
+<p>You need to override this method if you expect your model or its blocks to serve as a base for other models
+(e.g. VGG for FCN, ResNet for LinkNet, etc).</p>
+<p>Put here all constants (like the number of filters, kernel sizes, block layouts, strides, etc)
+specific to the model, but independent of anything else (like image shapes, number of classes, etc).</p>
+<p>These defaults can be changed in <a class="reference internal" href="batchflow.models.tf.base.html#batchflow.models.tf.base.TFModel.build_config" title="batchflow.models.tf.base.TFModel.build_config"><code class="xref py py-meth docutils literal notranslate"><span class="pre">build_config()</span></code></a> or when calling <a class="reference internal" href="batchflow.pipeline.html#batchflow.Pipeline.init_model" title="batchflow.Pipeline.init_model"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Pipeline.init_model()</span></code></a>.</p>
+<p>Usually, it looks like:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="nd">@classmethod</span>
+<span class="k">def</span> <span class="nf">default_config</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
+    <span class="n">config</span> <span class="o">=</span> <span class="n">TFModel</span><span class="o">.</span><span class="n">default_config</span><span class="p">()</span>
+    <span class="n">config</span><span class="p">[</span><span class="s1">&#39;initial_block&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">layout</span><span class="o">=</span><span class="s1">&#39;cnap&#39;</span><span class="p">,</span> <span class="n">filters</span><span class="o">=</span><span class="mi">16</span><span class="p">,</span> <span class="n">kernel_size</span><span class="o">=</span><span class="mi">7</span><span class="p">,</span> <span class="n">strides</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+                                   <span class="n">pool_size</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">pool_strides</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+    <span class="n">config</span><span class="p">[</span><span class="s1">&#39;body/filters&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">32</span>
+    <span class="n">config</span><span class="p">[</span><span class="s1">&#39;head&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">layout</span><span class="o">=</span><span class="s1">&#39;cnadV&#39;</span><span class="p">,</span> <span class="n">dropout_rate</span><span class="o">=.</span><span class="mi">2</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">config</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="batchflow.models.tf.encoder_decoder.EncoderDecoder.build_config">
+<code class="sig-name descname">build_config</code><span class="sig-paren">(</span><em class="sig-param">names=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/batchflow/models/tf/encoder_decoder.html#EncoderDecoder.build_config"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#batchflow.models.tf.encoder_decoder.EncoderDecoder.build_config" title="Permalink to this definition">¶</a></dt>
+<dd><p>Define a model architecture configuration</p>
+<p>It takes just 2 steps:</p>
+<ol class="arabic">
+<li><p>Define names for all placeholders and make input tensors by calling <code class="docutils literal notranslate"><span class="pre">super().build_config(names)</span></code>.</p>
+<p>If the model config does not contain any name from <code class="docutils literal notranslate"><span class="pre">names</span></code>, <a class="reference external" href="https://docs.python.org/3/library/exceptions.html#KeyError" title="(in Python v3.7)"><code class="xref py py-exc docutils literal notranslate"><span class="pre">KeyError</span></code></a> is raised.</p>
+<p>See <a class="reference internal" href="batchflow.models.tf.base.html#batchflow.models.tf.TFModel._make_inputs" title="batchflow.models.tf.TFModel._make_inputs"><code class="xref py py-meth docutils literal notranslate"><span class="pre">TFModel._make_inputs()</span></code></a> for details.</p>
+</li>
+<li><p>Define parameters for <a class="reference internal" href="batchflow.models.tf.base.html#batchflow.models.tf.base.TFModel.initial_block" title="batchflow.models.tf.base.TFModel.initial_block"><code class="xref py py-meth docutils literal notranslate"><span class="pre">TFModel.initial_block()</span></code></a>, <a class="reference internal" href="batchflow.models.tf.base.html#batchflow.models.tf.base.TFModel.body" title="batchflow.models.tf.base.TFModel.body"><code class="xref py py-meth docutils literal notranslate"><span class="pre">TFModel.body()</span></code></a>, <a class="reference internal" href="batchflow.models.tf.base.html#batchflow.models.tf.base.TFModel.head" title="batchflow.models.tf.base.TFModel.head"><code class="xref py py-meth docutils literal notranslate"><span class="pre">TFModel.head()</span></code></a>
+which depend on inputs.</p></li>
+<li><p>Don’t forget to return <code class="docutils literal notranslate"><span class="pre">config</span></code>.</p></li>
+</ol>
+<p>Typically it looks like this:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">build_config</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">names</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+    <span class="n">names</span> <span class="o">=</span> <span class="n">names</span> <span class="ow">or</span> <span class="p">[</span><span class="s1">&#39;images&#39;</span><span class="p">,</span> <span class="s1">&#39;labels&#39;</span><span class="p">]</span>
+    <span class="n">config</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">build_config</span><span class="p">(</span><span class="n">names</span><span class="p">)</span>
+    <span class="n">config</span><span class="p">[</span><span class="s1">&#39;head&#39;</span><span class="p">][</span><span class="s1">&#39;num_classes&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">num_classes</span><span class="p">(</span><span class="s1">&#39;targets&#39;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">config</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="method">
+<dt id="batchflow.models.tf.encoder_decoder.EncoderDecoder.body">
+<em class="property">classmethod </em><code class="sig-name descname">body</code><span class="sig-paren">(</span><em class="sig-param">inputs</em>, <em class="sig-param">name='body'</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/batchflow/models/tf/encoder_decoder.html#EncoderDecoder.body"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#batchflow.models.tf.encoder_decoder.EncoderDecoder.body" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create encoder, embedding and decoder.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="batchflow.models.tf.encoder_decoder.EncoderDecoder.head">
+<em class="property">classmethod </em><code class="sig-name descname">head</code><span class="sig-paren">(</span><em class="sig-param">inputs</em>, <em class="sig-param">targets</em>, <em class="sig-param">name='head'</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/batchflow/models/tf/encoder_decoder.html#EncoderDecoder.head"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#batchflow.models.tf.encoder_decoder.EncoderDecoder.head" title="Permalink to this definition">¶</a></dt>
+<dd><p>Linear convolutions.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="batchflow.models.tf.encoder_decoder.EncoderDecoder.block">
+<em class="property">classmethod </em><code class="sig-name descname">block</code><span class="sig-paren">(</span><em class="sig-param">inputs</em>, <em class="sig-param">name='block'</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/batchflow/models/tf/encoder_decoder.html#EncoderDecoder.block"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#batchflow.models.tf.encoder_decoder.EncoderDecoder.block" title="Permalink to this definition">¶</a></dt>
+<dd><p>Default conv block for processing tensors in encoder and decoder.
+By default makes 3x3 convolutions followed by batch-norm and activation.
+Does not change tensor shapes.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="batchflow.models.tf.encoder_decoder.EncoderDecoder.encoder">
+<em class="property">classmethod </em><code class="sig-name descname">encoder</code><span class="sig-paren">(</span><em class="sig-param">inputs</em>, <em class="sig-param">name='encoder'</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/batchflow/models/tf/encoder_decoder.html#EncoderDecoder.encoder"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#batchflow.models.tf.encoder_decoder.EncoderDecoder.encoder" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create encoder either by using <code class="docutils literal notranslate"><span class="pre">make_encoder</span></code> of passed <cite>base</cite> model,
+or by combining building blocks, specified in <cite>blocks/base</cite>.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>inputs</strong> (<em>tf.Tensor</em>) – Input tensor.</p></li>
+<li><p><strong>base</strong> (<a class="reference internal" href="batchflow.models.tf.base.html#batchflow.models.tf.base.TFModel" title="batchflow.models.tf.base.TFModel"><em>TFModel</em></a>) – Model class. Should implement <code class="docutils literal notranslate"><span class="pre">make_encoder</span></code> method.</p></li>
+<li><p><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)"><em>str</em></a>) – Scope name.</p></li>
+<li><p><strong>num_stages</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.7)"><em>int</em></a>) – Number of downsampling stages.</p></li>
+<li><p><strong>blocks</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.7)"><em>dict</em></a>) – Parameters for tensor processing before downsampling.</p></li>
+<li><p><strong>downsample</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.7)"><em>dict</em></a>) – Parameters for downsampling.</p></li>
+<li><p><strong>kwargs</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.7)"><em>dict</em></a>) – Parameters for <code class="docutils literal notranslate"><span class="pre">make_encoder</span></code> method.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>list of tf.Tensors</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="batchflow.models.tf.encoder_decoder.EncoderDecoder.embedding">
+<em class="property">classmethod </em><code class="sig-name descname">embedding</code><span class="sig-paren">(</span><em class="sig-param">inputs</em>, <em class="sig-param">name='embedding'</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/batchflow/models/tf/encoder_decoder.html#EncoderDecoder.embedding"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#batchflow.models.tf.encoder_decoder.EncoderDecoder.embedding" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create embedding from inputs tensor.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>inputs</strong> (<em>tf.Tensor</em>) – Input tensor.</p></li>
+<li><p><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)"><em>str</em></a>) – Scope name.</p></li>
+<li><p><strong>base</strong> (<em>callable</em>) – Tensor processing function. Default is <a class="reference internal" href="batchflow.models.tf.layers.html#batchflow.models.tf.layers.conv_block" title="batchflow.models.tf.layers.conv_block"><code class="xref py py-func docutils literal notranslate"><span class="pre">conv_block()</span></code></a>.</p></li>
+<li><p><strong>kwargs</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.7)"><em>dict</em></a>) – Parameters for <cite>base</cite> block.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>tf.Tensor</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="method">
+<dt id="batchflow.models.tf.encoder_decoder.EncoderDecoder.decoder">
+<em class="property">classmethod </em><code class="sig-name descname">decoder</code><span class="sig-paren">(</span><em class="sig-param">inputs</em>, <em class="sig-param">name='decoder'</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/batchflow/models/tf/encoder_decoder.html#EncoderDecoder.decoder"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#batchflow.models.tf.encoder_decoder.EncoderDecoder.decoder" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create decoder with a given number of upsampling stages.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>inputs</strong> (<em>tf.Tensor</em>) – Input tensor.</p></li>
+<li><p><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)"><em>str</em></a>) – Scope name.</p></li>
+<li><p><strong>steps</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.7)"><em>int</em></a>) – Number of upsampling stages. Defaults to the number of downsamplings.</p></li>
+<li><p><strong>factor</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.7)"><em>int</em></a><em> or </em><em>list of ints</em>) – If int, the total upsampling factor for all stages combined.
+If list, upsampling factors for each stage.s, then each entry is increase of size on i-th upsampling stage.</p></li>
+<li><p><strong>skip</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.7)"><em>bool</em></a>) – Whether to concatenate upsampled tensor with stored pre-downsample encoding.</p></li>
+<li><p><strong>upsample</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.7)"><em>dict</em></a>) – Parameters for upsampling.</p></li>
+<li><p><strong>blocks</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.7)"><em>dict</em></a>) – Parameters for post-processing blocks.</p></li>
+<li><p><strong>kwargs</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.7)"><em>dict</em></a>) – Parameters for <code class="docutils literal notranslate"><span class="pre">upsample</span></code> method.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>tf.Tensor</p>
+</dd>
+<dt class="field-even">Raises</dt>
+<dd class="field-even"><p><a class="reference external" href="https://docs.python.org/3/library/exceptions.html#TypeError" title="(in Python v3.7)"><strong>TypeError</strong></a> – If passed <cite>factor</cite> is not integer or list.</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="batchflow.models.tf.encoder_decoder.AutoEncoder">
+<em class="property">class </em><code class="sig-name descname">AutoEncoder</code><span class="sig-paren">(</span><em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/batchflow/models/tf/encoder_decoder.html#AutoEncoder"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#batchflow.models.tf.encoder_decoder.AutoEncoder" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#batchflow.models.tf.encoder_decoder.EncoderDecoder" title="batchflow.models.tf.encoder_decoder.EncoderDecoder"><code class="xref py py-class docutils literal notranslate"><span class="pre">batchflow.models.tf.encoder_decoder.EncoderDecoder</span></code></a></p>
+<p>Model without skip-connections between corresponding stages of encoder and decoder.</p>
+<dl class="method">
+<dt id="batchflow.models.tf.encoder_decoder.AutoEncoder.default_config">
+<em class="property">classmethod </em><code class="sig-name descname">default_config</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/batchflow/models/tf/encoder_decoder.html#AutoEncoder.default_config"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#batchflow.models.tf.encoder_decoder.AutoEncoder.default_config" title="Permalink to this definition">¶</a></dt>
+<dd><p>Define model defaults</p>
+<p>You need to override this method if you expect your model or its blocks to serve as a base for other models
+(e.g. VGG for FCN, ResNet for LinkNet, etc).</p>
+<p>Put here all constants (like the number of filters, kernel sizes, block layouts, strides, etc)
+specific to the model, but independent of anything else (like image shapes, number of classes, etc).</p>
+<p>These defaults can be changed in <a class="reference internal" href="batchflow.models.tf.base.html#batchflow.models.tf.base.TFModel.build_config" title="batchflow.models.tf.base.TFModel.build_config"><code class="xref py py-meth docutils literal notranslate"><span class="pre">build_config()</span></code></a> or when calling <a class="reference internal" href="batchflow.pipeline.html#batchflow.Pipeline.init_model" title="batchflow.Pipeline.init_model"><code class="xref py py-meth docutils literal notranslate"><span class="pre">Pipeline.init_model()</span></code></a>.</p>
+<p>Usually, it looks like:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="nd">@classmethod</span>
+<span class="k">def</span> <span class="nf">default_config</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
+    <span class="n">config</span> <span class="o">=</span> <span class="n">TFModel</span><span class="o">.</span><span class="n">default_config</span><span class="p">()</span>
+    <span class="n">config</span><span class="p">[</span><span class="s1">&#39;initial_block&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">layout</span><span class="o">=</span><span class="s1">&#39;cnap&#39;</span><span class="p">,</span> <span class="n">filters</span><span class="o">=</span><span class="mi">16</span><span class="p">,</span> <span class="n">kernel_size</span><span class="o">=</span><span class="mi">7</span><span class="p">,</span> <span class="n">strides</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span>
+                                   <span class="n">pool_size</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">pool_strides</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+    <span class="n">config</span><span class="p">[</span><span class="s1">&#39;body/filters&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="mi">32</span>
+    <span class="n">config</span><span class="p">[</span><span class="s1">&#39;head&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">layout</span><span class="o">=</span><span class="s1">&#39;cnadV&#39;</span><span class="p">,</span> <span class="n">dropout_rate</span><span class="o">=.</span><span class="mi">2</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">config</span>
+</pre></div>
+</div>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="batchflow.models.tf.encoder_decoder.VariationalAutoEncoder">
+<em class="property">class </em><code class="sig-name descname">VariationalAutoEncoder</code><span class="sig-paren">(</span><em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/batchflow/models/tf/encoder_decoder.html#VariationalAutoEncoder"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#batchflow.models.tf.encoder_decoder.VariationalAutoEncoder" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#batchflow.models.tf.encoder_decoder.AutoEncoder" title="batchflow.models.tf.encoder_decoder.AutoEncoder"><code class="xref py py-class docutils literal notranslate"><span class="pre">batchflow.models.tf.encoder_decoder.AutoEncoder</span></code></a></p>
+<p>Autoencoder that maps input into distribution. Based on
+Kingma, Diederik P; Welling, Max “<a class="reference external" href="https://arxiv.org/abs/1312.6114">Auto-Encoding Variational Bayes</a>”</p>
+<p class="rubric">Notes</p>
+<p>Distribution that is learned is always normal.</p>
+<dl class="method">
+<dt id="batchflow.models.tf.encoder_decoder.VariationalAutoEncoder.embedding">
+<em class="property">classmethod </em><code class="sig-name descname">embedding</code><span class="sig-paren">(</span><em class="sig-param">inputs</em>, <em class="sig-param">name='embedding'</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/batchflow/models/tf/encoder_decoder.html#VariationalAutoEncoder.embedding"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#batchflow.models.tf.encoder_decoder.VariationalAutoEncoder.embedding" title="Permalink to this definition">¶</a></dt>
+<dd><p>Create embedding from inputs tensor.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>inputs</strong> (<em>tf.Tensor</em>) – Input tensor.</p></li>
+<li><p><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)"><em>str</em></a>) – Scope name.</p></li>
+<li><p><strong>base</strong> (<em>callable</em>) – Tensor processing function. Default is <a class="reference internal" href="batchflow.models.tf.layers.html#batchflow.models.tf.layers.conv_block" title="batchflow.models.tf.layers.conv_block"><code class="xref py py-func docutils literal notranslate"><span class="pre">conv_block()</span></code></a>.</p></li>
+<li><p><strong>kwargs</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.7)"><em>dict</em></a>) – Parameters for <cite>base</cite> block.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>tf.Tensor</p>
+</dd>
+</dl>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="../intro/tf_layers.html" title="Tensorflow layers and losses"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="batchflow.models.tf.faster_rcnn.html" title="Faster RCNN"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">BatchFlow 0.3.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../intro/classes.html" >Classes and capabilities</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="../intro/tf_models.html" >Tensorflow models</a> &#187;</li>
+          <li class="nav-item nav-item-3"><a href="batchflow.models.tf.models.html" >Models</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2017, Analysis Center.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.1.0.
+    </div>
+  </body>
+</html>

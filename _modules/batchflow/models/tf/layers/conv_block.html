@@ -1,0 +1,312 @@
+
+
+<!doctype html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>batchflow.models.tf.layers.conv_block &#8212; BatchFlow 0.3.0 documentation</title>
+    <link rel="stylesheet" href="../../../../../_static/bizstyle.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript" id="documentation_options" data-url_root="../../../../../" src="../../../../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../../../../_static/language_data.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="../../../../../_static/bizstyle.js"></script>
+    <link rel="index" title="Index" href="../../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../../search.html" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <!--[if lt IE 9]>
+    <script type="text/javascript" src="_static/css3-mediaqueries.js"></script>
+    <![endif]-->
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../../../index.html">BatchFlow 0.3.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../../../index.html" accesskey="U">Module code</a> &#187;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for batchflow.models.tf.layers.conv_block</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot; Contains convolution layers &quot;&quot;&quot;</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="k">as</span> <span class="nn">np</span>
+<span class="kn">import</span> <span class="nn">tensorflow</span> <span class="k">as</span> <span class="nn">tf</span>
+
+<span class="kn">from</span> <span class="nn">.resize</span> <span class="k">import</span> <span class="n">resize_bilinear_additive</span><span class="p">,</span> <span class="n">resize_bilinear</span><span class="p">,</span> <span class="n">resize_nn</span><span class="p">,</span> <span class="n">subpixel_conv</span>
+<span class="kn">from</span> <span class="nn">.block</span> <span class="k">import</span> <span class="n">_conv_block</span><span class="p">,</span> <span class="n">_update_layers</span>
+
+
+<span class="n">_NEW_LAYERS</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s1">&#39;A&#39;</span><span class="p">:</span> <span class="s1">&#39;residual_bilinear_additive&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;b&#39;</span><span class="p">:</span> <span class="s1">&#39;resize_bilinear&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;B&#39;</span><span class="p">:</span> <span class="s1">&#39;resize_bilinear_additive&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;N&#39;</span><span class="p">:</span> <span class="s1">&#39;resize_nn&#39;</span><span class="p">,</span>
+    <span class="s1">&#39;X&#39;</span><span class="p">:</span> <span class="s1">&#39;subpixel_conv&#39;</span>
+<span class="p">}</span>
+
+<span class="n">_NEW_FUNCS</span> <span class="o">=</span> <span class="p">{</span>
+    <span class="s1">&#39;residual_bilinear_additive&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="s1">&#39;resize_bilinear&#39;</span><span class="p">:</span> <span class="n">resize_bilinear</span><span class="p">,</span>
+    <span class="s1">&#39;resize_bilinear_additive&#39;</span><span class="p">:</span> <span class="n">resize_bilinear_additive</span><span class="p">,</span>
+    <span class="s1">&#39;resize_nn&#39;</span><span class="p">:</span> <span class="n">resize_nn</span><span class="p">,</span>
+    <span class="s1">&#39;subpixel_conv&#39;</span><span class="p">:</span> <span class="n">subpixel_conv</span>
+<span class="p">}</span>
+
+<span class="n">_NEW_GROUPS</span> <span class="o">=</span> <span class="p">{</span><span class="s1">&#39;A&#39;</span><span class="p">:</span> <span class="s1">&#39;b&#39;</span><span class="p">,</span> <span class="s1">&#39;B&#39;</span><span class="p">:</span> <span class="s1">&#39;b&#39;</span><span class="p">,</span> <span class="s1">&#39;N&#39;</span><span class="p">:</span> <span class="s1">&#39;b&#39;</span><span class="p">,</span> <span class="s1">&#39;X&#39;</span><span class="p">:</span> <span class="s1">&#39;b&#39;</span><span class="p">}</span>
+
+<span class="n">_update_layers</span><span class="p">(</span><span class="n">_NEW_LAYERS</span><span class="p">,</span> <span class="n">_NEW_FUNCS</span><span class="p">,</span> <span class="n">_NEW_GROUPS</span><span class="p">)</span>
+
+
+<div class="viewcode-block" id="conv_block"><a class="viewcode-back" href="../../../../../api/batchflow.models.tf.layers.html#batchflow.models.tf.layers.conv_block">[docs]</a><span class="k">def</span> <span class="nf">conv_block</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">layout</span><span class="o">=</span><span class="s1">&#39;&#39;</span><span class="p">,</span> <span class="n">filters</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">kernel_size</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
+               <span class="n">strides</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">padding</span><span class="o">=</span><span class="s1">&#39;same&#39;</span><span class="p">,</span> <span class="n">data_format</span><span class="o">=</span><span class="s1">&#39;channels_last&#39;</span><span class="p">,</span> <span class="n">dilation_rate</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">depth_multiplier</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span>
+               <span class="n">activation</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">nn</span><span class="o">.</span><span class="n">relu</span><span class="p">,</span> <span class="n">pool_size</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">pool_strides</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">dropout_rate</span><span class="o">=</span><span class="mf">0.</span><span class="p">,</span> <span class="n">is_training</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Complex multi-dimensional block with a sequence of convolutions, batch normalization, activation, pooling,</span>
+<span class="sd">    dropout and even dense layers.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    inputs : tf.Tensor</span>
+<span class="sd">        input tensor</span>
+<span class="sd">    layout : str</span>
+<span class="sd">        a sequence of operations:</span>
+
+<span class="sd">        - c - convolution</span>
+<span class="sd">        - t - transposed convolution</span>
+<span class="sd">        - C - separable convolution</span>
+<span class="sd">        - T - separable transposed convolution</span>
+<span class="sd">        - f - dense (fully connected)</span>
+<span class="sd">        - n - batch normalization</span>
+<span class="sd">        - a - activation</span>
+<span class="sd">        - p - pooling (default is max-pooling)</span>
+<span class="sd">        - v - average pooling</span>
+<span class="sd">        - P - global pooling (default is max-pooling)</span>
+<span class="sd">        - V - global average pooling</span>
+<span class="sd">        - d - dropout</span>
+<span class="sd">        - D - alpha dropout</span>
+<span class="sd">        - m - maximum intensity projection (:func:`~.layers.mip`)</span>
+<span class="sd">        - b - upsample with bilinear resize</span>
+<span class="sd">        - B - upsample with bilinear additive resize</span>
+<span class="sd">        - N - upsample with nearest neighbors resize</span>
+<span class="sd">        - X - upsample with subpixel convolution (:func:`~.layers.subpixel_conv`)</span>
+<span class="sd">        - R - start residual connection</span>
+<span class="sd">        - A - start residual connection with bilinear additive upsampling</span>
+<span class="sd">        - `+` - end residual connection with summation</span>
+<span class="sd">        - `.` - end residual connection with concatenation</span>
+
+<span class="sd">        Default is &#39;&#39;.</span>
+<span class="sd">    filters : int</span>
+<span class="sd">        the number of filters in the output tensor</span>
+<span class="sd">    kernel_size : int</span>
+<span class="sd">        kernel size</span>
+<span class="sd">    name : str</span>
+<span class="sd">        name of the layer that will be used as a scope.</span>
+<span class="sd">    units : int</span>
+<span class="sd">        the number of units in the dense layer</span>
+<span class="sd">    strides : int</span>
+<span class="sd">        Default is 1.</span>
+<span class="sd">    padding : str</span>
+<span class="sd">        padding mode, can be &#39;same&#39; or &#39;valid&#39;. Default - &#39;same&#39;,</span>
+<span class="sd">    data_format : str</span>
+<span class="sd">        &#39;channels_last&#39; or &#39;channels_first&#39;. Default - &#39;channels_last&#39;.</span>
+<span class="sd">    dilation_rate: int</span>
+<span class="sd">        Default is 1.</span>
+<span class="sd">    activation : callable</span>
+<span class="sd">        Default is `tf.nn.relu`.</span>
+<span class="sd">    pool_size : int</span>
+<span class="sd">        Default is 2.</span>
+<span class="sd">    pool_strides : int</span>
+<span class="sd">        Default is 2.</span>
+<span class="sd">    pool_op : str</span>
+<span class="sd">        pooling operation (&#39;max&#39;, &#39;mean&#39;, &#39;frac&#39;)</span>
+<span class="sd">    dropout_rate : float</span>
+<span class="sd">        Default is 0.</span>
+<span class="sd">    factor : int or tuple of int</span>
+<span class="sd">        upsampling factor</span>
+<span class="sd">    upsampling_layout : str</span>
+<span class="sd">        layout for upsampling layers</span>
+<span class="sd">    is_training : bool or tf.Tensor</span>
+<span class="sd">        Default is True.</span>
+<span class="sd">    reuse : bool</span>
+<span class="sd">        whether to user layer variables if exist</span>
+
+<span class="sd">    dense : dict</span>
+<span class="sd">        parameters for dense layers, like initializers, regularalizers, etc</span>
+<span class="sd">    conv : dict</span>
+<span class="sd">        parameters for convolution layers, like initializers, regularalizers, etc</span>
+<span class="sd">    transposed_conv : dict</span>
+<span class="sd">        parameters for transposed conv layers, like initializers, regularalizers, etc</span>
+<span class="sd">    batch_norm : dict or None</span>
+<span class="sd">        parameters for batch normalization layers, like momentum, intiializers, etc</span>
+<span class="sd">        If None or inculdes parameters &#39;off&#39; or &#39;disable&#39; set to True or 1,</span>
+<span class="sd">        the layer will be excluded whatsoever.</span>
+<span class="sd">    pooling : dict</span>
+<span class="sd">        parameters for pooling layers, like initializers, regularalizers, etc</span>
+<span class="sd">    dropout : dict or None</span>
+<span class="sd">        parameters for dropout layers, like noise_shape, etc</span>
+<span class="sd">        If None or inculdes parameters &#39;off&#39; or &#39;disable&#39; set to True or 1,</span>
+<span class="sd">        the layer will be excluded whatsoever.</span>
+<span class="sd">    subpixel_conv : dict or None</span>
+<span class="sd">        parameters for subpixel convolution (layout, activation, etc)</span>
+<span class="sd">    resize_bilinear : dict or None</span>
+<span class="sd">        parameters for bilinear resize</span>
+<span class="sd">    resize_bilinear_additive : dict or None</span>
+<span class="sd">        parameters for bilinear additive resize (layout, activation, etc)</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    output tensor : tf.Tensor</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    When ``layout`` includes several layers of the same type, each one can have its own parameters,</span>
+<span class="sd">    if corresponding args are passed as lists (not tuples).</span>
+
+<span class="sd">    Spaces may be used to improve readability.</span>
+
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    A simple block: 3x3 conv, batch norm, relu, 2x2 max-pooling with stride 2::</span>
+
+<span class="sd">        x = conv_block(x, &#39;cnap&#39;, filters=32, kernel_size=3)</span>
+
+<span class="sd">    A canonical bottleneck block (1x1, 3x3, 1x1 conv with relu in-between)::</span>
+
+<span class="sd">        x = conv_block(x, &#39;nac nac nac&#39;, [64, 64, 256], [1, 3, 1])</span>
+
+<span class="sd">    A complex Nd block:</span>
+
+<span class="sd">    - 5x5 conv with 32 filters</span>
+<span class="sd">    - relu</span>
+<span class="sd">    - 3x3 conv with 32 filters</span>
+<span class="sd">    - relu</span>
+<span class="sd">    - 3x3 conv with 64 filters and a spatial stride 2</span>
+<span class="sd">    - relu</span>
+<span class="sd">    - batch norm</span>
+<span class="sd">    - dropout with rate 0.15</span>
+
+<span class="sd">    ::</span>
+
+<span class="sd">        x = conv_block(x, &#39;ca ca ca nd&#39;, [32, 32, 64], [5, 3, 3], strides=[1, 1, 2], dropout_rate=.15)</span>
+
+<span class="sd">    A residual block::</span>
+
+<span class="sd">        x = conv_block(x, &#39;R nac nac +&#39;, [16, 16, 64], [1, 3, 1])</span>
+
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="n">tensor</span> <span class="o">=</span> <span class="n">_conv_block</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">layout</span><span class="p">,</span> <span class="n">filters</span><span class="p">,</span> <span class="n">kernel_size</span><span class="p">,</span> <span class="n">name</span><span class="p">,</span>
+                         <span class="n">strides</span><span class="p">,</span> <span class="n">padding</span><span class="p">,</span> <span class="n">data_format</span><span class="p">,</span> <span class="n">dilation_rate</span><span class="p">,</span> <span class="n">depth_multiplier</span><span class="p">,</span>
+                         <span class="n">activation</span><span class="p">,</span> <span class="n">pool_size</span><span class="p">,</span> <span class="n">pool_strides</span><span class="p">,</span> <span class="n">dropout_rate</span><span class="p">,</span> <span class="n">is_training</span><span class="p">,</span>
+                         <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">tensor</span></div>
+
+
+<div class="viewcode-block" id="upsample"><a class="viewcode-back" href="../../../../../intro/tf_layers.html#batchflow.models.tf.layers.upsample">[docs]</a><span class="k">def</span> <span class="nf">upsample</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">factor</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">shape</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">layout</span><span class="o">=</span><span class="s1">&#39;b&#39;</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;upsample&#39;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Upsample inputs with a given factor</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    inputs : tf.Tensor</span>
+<span class="sd">        a tensor to resize</span>
+<span class="sd">    factor : int</span>
+<span class="sd">        an upsamping scale</span>
+<span class="sd">    shape : tuple of int</span>
+<span class="sd">        a shape to upsample to (used by bilinear and NN resize)</span>
+<span class="sd">    layout : str</span>
+<span class="sd">        resizing technique, a sequence of:</span>
+
+<span class="sd">        - A - use residual connection with bilinear additive upsampling</span>
+<span class="sd">        - b - bilinear resize</span>
+<span class="sd">        - B - bilinear additive upsampling</span>
+<span class="sd">        - N - nearest neighbor resize</span>
+<span class="sd">        - t - transposed convolution</span>
+<span class="sd">        - T - separable transposed convolution</span>
+<span class="sd">        - X - subpixel convolution</span>
+
+<span class="sd">        all other :func:`.conv_block` layers are also allowed.</span>
+
+<span class="sd">    Returns</span>
+<span class="sd">    -------</span>
+<span class="sd">    tf.Tensor</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    A simple bilinear upsampling::</span>
+
+<span class="sd">        x = upsample(inputs, shape=(256, 256), layout=&#39;b&#39;)</span>
+
+<span class="sd">    Upsampling with non-linear normalized transposed convolution::</span>
+
+<span class="sd">        x = upsample(inputs, factor=2, layout=&#39;nat&#39;, kernel_size=3)</span>
+
+<span class="sd">    Subpixel convolution with a residual bilinear additive connection::</span>
+
+<span class="sd">        x = upsample(inputs, factor=2, layout=&#39;AX+&#39;)</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">np</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">factor</span> <span class="o">==</span> <span class="mi">1</span><span class="p">):</span>
+        <span class="k">return</span> <span class="n">inputs</span>
+
+    <span class="k">if</span> <span class="s1">&#39;t&#39;</span> <span class="ow">in</span> <span class="n">layout</span> <span class="ow">or</span> <span class="s1">&#39;T&#39;</span> <span class="ow">in</span> <span class="n">layout</span><span class="p">:</span>
+        <span class="k">if</span> <span class="s1">&#39;kernel_size&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+            <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;kernel_size&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">factor</span>
+        <span class="k">if</span> <span class="s1">&#39;strides&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="p">:</span>
+            <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;strides&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="n">factor</span>
+
+    <span class="n">x</span> <span class="o">=</span> <span class="n">conv_block</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">layout</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span> <span class="n">factor</span><span class="o">=</span><span class="n">factor</span><span class="p">,</span> <span class="n">shape</span><span class="o">=</span><span class="n">shape</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">x</span></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../../../index.html">BatchFlow 0.3.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../../../index.html" >Module code</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2017, Analysis Center.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.1.0.
+    </div>
+  </body>
+</html>

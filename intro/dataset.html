@@ -1,0 +1,263 @@
+
+
+<!doctype html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>Dataset &#8212; BatchFlow 0.3.0 documentation</title>
+    <link rel="stylesheet" href="../_static/bizstyle.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="../_static/bizstyle.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Batch class" href="batch.html" />
+    <link rel="prev" title="Index" href="dsindex.html" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <!--[if lt IE 9]>
+    <script type="text/javascript" src="_static/css3-mediaqueries.js"></script>
+    <![endif]-->
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="batch.html" title="Batch class"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="dsindex.html" title="Index"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">BatchFlow 0.3.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="classes.html" accesskey="U">Classes and capabilities</a> &#187;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="../index.html">Table of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Dataset</a><ul>
+<li><a class="reference internal" href="#creating-a-dataset">Creating a dataset</a></li>
+<li><a class="reference internal" href="#preloading-data">Preloading data</a></li>
+<li><a class="reference internal" href="#adding-custom-data">Adding custom data</a></li>
+<li><a class="reference internal" href="#splitting-a-dataset">Splitting a dataset</a><ul>
+<li><a class="reference internal" href="#parameters">Parameters</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#cross-validation">Cross-validation</a></li>
+<li><a class="reference internal" href="#iterating-over-a-dataset">Iterating over a dataset</a><ul>
+<li><a class="reference internal" href="#id1">Parameters</a></li>
+</ul>
+</li>
+<li><a class="reference internal" href="#custom-batch-class">Custom batch class</a></li>
+<li><a class="reference internal" href="#api">API</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="dsindex.html"
+                        title="previous chapter">Index</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="batch.html"
+                        title="next chapter">Batch class</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/intro/dataset.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="dataset">
+<h1>Dataset<a class="headerlink" href="#dataset" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="creating-a-dataset">
+<h2>Creating a dataset<a class="headerlink" href="#creating-a-dataset" title="Permalink to this headline">¶</a></h2>
+<p>The <cite>Dataset</cite> holds an index of all data items (e.g. customers, transactions, etc) and a specific action class
+to process a small subset of data (batch).</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span> <span class="nn">batchflow</span> <span class="kn">import</span> <span class="n">DatasetIndex</span><span class="p">,</span> <span class="n">Dataset</span><span class="p">,</span> <span class="n">Batch</span>
+
+<span class="n">client_index</span> <span class="o">=</span> <span class="n">DatasetIndex</span><span class="p">(</span><span class="n">client_ids_list</span><span class="p">)</span>
+<span class="n">client_dataset</span> <span class="o">=</span> <span class="n">Dataset</span><span class="p">(</span><span class="n">client_index</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>By default a dataset will generate batches of <a class="reference internal" href="../api/batchflow.batch.html#batchflow.Batch" title="batchflow.Batch"><code class="xref py py-class docutils literal notranslate"><span class="pre">Batch</span></code></a> class.
+A custom <a class="reference internal" href="batch.html"><span class="doc">batch class</span></a> may also be provided:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">client_dataset</span> <span class="o">=</span> <span class="n">Dataset</span><span class="p">(</span><span class="n">client_index</span><span class="p">,</span> <span class="n">batch_class</span><span class="o">=</span><span class="n">MyBatch</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="preloading-data">
+<h2>Preloading data<a class="headerlink" href="#preloading-data" title="Permalink to this headline">¶</a></h2>
+<p>For smaller dataset it might be convenient to preload all data at once:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">client_dataset</span> <span class="o">=</span> <span class="n">Dataset</span><span class="p">(</span><span class="n">client_index</span><span class="p">,</span> <span class="n">batch_class</span><span class="o">=</span><span class="n">Batch</span><span class="p">,</span> <span class="n">preloaded</span><span class="o">=</span><span class="n">some_data</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>As a result, all created batches will contain a portion of <cite>some_data</cite>.</p>
+</div>
+<div class="section" id="adding-custom-data">
+<h2>Adding custom data<a class="headerlink" href="#adding-custom-data" title="Permalink to this headline">¶</a></h2>
+<p>To store dataset-specific data which can be later accessed within pipelines or batches, just pass it as keyword-parameters
+when instantiating a dataset.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">client_dataset</span> <span class="o">=</span> <span class="n">Dataset</span><span class="p">(</span><span class="n">client_index</span><span class="p">,</span> <span class="n">locations</span><span class="o">=</span><span class="n">loc_data</span><span class="p">,</span> <span class="n">products</span><span class="o">=</span><span class="n">product_list</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Custom data is available as dataset attributes, e.g. <cite>client_dataset.locations</cite> and <cite>client_dataset.products</cite>.</p>
+</div>
+<div class="section" id="splitting-a-dataset">
+<h2>Splitting a dataset<a class="headerlink" href="#splitting-a-dataset" title="Permalink to this headline">¶</a></h2>
+<p>A dataset can be easily split into train, test and validation subsets.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">client_dataset</span><span class="o">.</span><span class="n">split</span><span class="p">([</span><span class="o">.</span><span class="mi">8</span><span class="p">,</span> <span class="o">.</span><span class="mi">1</span><span class="p">,</span> <span class="o">.</span><span class="mi">1</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>All parts are also datasets, which can be addressed as <cite>dataset.train</cite>, <cite>dataset.test</cite> and <cite>dataset.validation</cite>.</p>
+<div class="section" id="parameters">
+<h3>Parameters<a class="headerlink" href="#parameters" title="Permalink to this headline">¶</a></h3>
+<p><cite>shares</cite> - train/test/validation shares. Can be float, tuple of 2 floats, or tuple of 3 floats.</p>
+<p><cite>shuffle</cite> - whether to randomize items order before splitting into subsets. Default is <cite>False</cite>. Can be</p>
+<ul class="simple">
+<li><p><cite>bool</cite> : <cite>False</cite> - to make subsets in the order of indices in the index, or <cite>True</cite> - to make random subsets.</p></li>
+<li><p>a <a class="reference external" href="https://docs.scipy.org/doc/numpy/reference/generated/numpy.random.RandomState.html#numpy.random.RandomState" title="(in NumPy v1.16)"><code class="xref py py-class docutils literal notranslate"><span class="pre">numpy.random.RandomState</span></code></a> object which has an inplace shuffle method.</p></li>
+<li><p><cite>int</cite> - a random seed number which will be used internally to create a <a class="reference external" href="https://docs.scipy.org/doc/numpy/reference/generated/numpy.random.RandomState.html#numpy.random.RandomState" title="(in NumPy v1.16)"><code class="xref py py-class docutils literal notranslate"><span class="pre">numpy.random.RandomState</span></code></a> object.</p></li>
+<li><p><cite>callable</cite> - a function which gets an order and returns a shuffled order.</p></li>
+</ul>
+</div>
+</div>
+<div class="section" id="cross-validation">
+<h2>Cross-validation<a class="headerlink" href="#cross-validation" title="Permalink to this headline">¶</a></h2>
+<p>A dataset can also be partitioned for cross-validation.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">dataset</span><span class="o">.</span><span class="n">cv_split</span><span class="p">(</span><span class="n">n_splits</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">shuffle</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Now partitions which are also datasets can be available as <cite>cv0</cite>, <cite>cv1</cite> and so on.
+And each dataset is already split into train and test parts.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">dataset</span> <span class="o">=</span> <span class="n">Dataset</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
+<span class="n">dataset</span><span class="o">.</span><span class="n">cv_split</span><span class="p">(</span><span class="n">n_splits</span><span class="o">=</span><span class="mi">3</span><span class="p">,</span> <span class="n">shuffle</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+<span class="n">dataset</span><span class="o">.</span><span class="n">cv0</span><span class="o">.</span><span class="n">test</span><span class="o">.</span><span class="n">indices</span> <span class="c1"># [0, 1, 2, 3]</span>
+<span class="n">dataset</span><span class="o">.</span><span class="n">cv1</span><span class="o">.</span><span class="n">test</span><span class="o">.</span><span class="n">indices</span> <span class="c1"># [4, 5, 6]</span>
+<span class="n">dataset</span><span class="o">.</span><span class="n">cv2</span><span class="o">.</span><span class="n">test</span><span class="o">.</span><span class="n">indices</span> <span class="c1"># [7, 8, 9]</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="iterating-over-a-dataset">
+<h2>Iterating over a dataset<a class="headerlink" href="#iterating-over-a-dataset" title="Permalink to this headline">¶</a></h2>
+<p>And now you can conveniently iterate over the dataset:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">BATCH_SIZE</span> <span class="o">=</span> <span class="mi">200</span>
+<span class="k">for</span> <span class="n">client_batch</span> <span class="ow">in</span> <span class="n">client_dataset</span><span class="o">.</span><span class="n">gen_batch</span><span class="p">(</span><span class="n">BATCH_SIZE</span><span class="p">,</span> <span class="n">shuffle</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span> <span class="n">n_iters</span><span class="o">=</span><span class="mi">3</span><span class="p">):</span>
+    <span class="c1"># client_batch is an instance of Batch class which holds an index of the subset of the original dataset</span>
+    <span class="c1"># so you can do anything you want with that batch</span>
+    <span class="c1"># for instance, load some data, as the batch is empty when initialized</span>
+    <span class="n">batch_with_data</span> <span class="o">=</span> <span class="n">client_batch</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">client_data</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>You might also create batches with <cite>next_batch</cite> function:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">NUM_ITERS</span> <span class="o">=</span> <span class="mi">1000</span>
+<span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">NUM_ITERS</span><span class="p">):</span>
+    <span class="n">client_batch</span> <span class="o">=</span> <span class="n">client_dataset</span><span class="o">.</span><span class="n">next_batch</span><span class="p">(</span><span class="n">BATCH_SIZE</span><span class="p">,</span> <span class="n">shuffle</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">n_epochs</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+    <span class="n">batch_with_data</span> <span class="o">=</span> <span class="n">client_batch</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">client_data</span><span class="p">)</span>
+    <span class="c1"># ...</span>
+</pre></div>
+</div>
+<p>The only difference is that <a class="reference internal" href="../api/batchflow.dataset.html#batchflow.Dataset.gen_batch" title="batchflow.Dataset.gen_batch"><code class="xref py py-func docutils literal notranslate"><span class="pre">gen_batch()</span></code></a> is a generator,
+while <a class="reference internal" href="../api/batchflow.dataset.html#batchflow.Dataset.next_batch" title="batchflow.Dataset.next_batch"><code class="xref py py-func docutils literal notranslate"><span class="pre">next_batch()</span></code></a> is just an ordinary method.</p>
+<div class="section" id="id1">
+<h3>Parameters<a class="headerlink" href="#id1" title="Permalink to this headline">¶</a></h3>
+<p><cite>batch_size</cite> - number of items in the batch.</p>
+<p><cite>shuffle</cite> - whether to randomize items order before splitting into batches. Default is <cite>False</cite>. Can be</p>
+<ul class="simple">
+<li><p><cite>bool</cite> : <cite>False</cite> - to make batches in the order of indices in the index, or <cite>True</cite> - to make random batches.</p></li>
+<li><p>a <a class="reference external" href="https://docs.scipy.org/doc/numpy/reference/generated/numpy.random.RandomState.html#numpy.random.RandomState" title="(in NumPy v1.16)"><code class="xref py py-class docutils literal notranslate"><span class="pre">numpy.random.RandomState</span></code></a> object which has an inplace shuffle method.</p></li>
+<li><p><cite>int</cite> - a random seed number which will be used internally to create a <a class="reference external" href="https://docs.scipy.org/doc/numpy/reference/generated/numpy.random.RandomState.html#numpy.random.RandomState" title="(in NumPy v1.16)"><code class="xref py py-class docutils literal notranslate"><span class="pre">numpy.random.RandomState</span></code></a> object.</p></li>
+<li><p><cite>sample function</cite> - any callable which gets an order and returns a shuffled order.</p></li>
+</ul>
+<p><cite>n_iters</cite> - number of iterations (i.e. number of batches created).</p>
+<p><cite>n_epochs</cite> - number of complete passes through the whole dataset.</p>
+<p>Only one of <cite>n_iters</cite> and <cite>n_epochs</cite> should be defined. If both are None, then you will get an infinite sequence of batches.</p>
+<p><cite>drop_last</cite> - whether to skip the last batch if it has fewer items (for instance, if a dataset contains 10 items and the batch size is 3, then there will 3 batches of 3 items and the 4th batch with just 1 item. The last batch will be skipped if <cite>drop_last=True</cite>). See <code class="xref py py-meth docutils literal notranslate"><span class="pre">API</span> <span class="pre">for</span> <span class="pre">more</span> <span class="pre">details</span></code>.</p>
+<p><cite>bar</cite> - whether to show a tqdm bar.</p>
+</div>
+</div>
+<div class="section" id="custom-batch-class">
+<h2>Custom batch class<a class="headerlink" href="#custom-batch-class" title="Permalink to this headline">¶</a></h2>
+<p>You can also define a new <a class="reference internal" href="batch.html"><span class="doc">batch class</span></a> with custom action methods to process your specific data.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">MyBatch</span><span class="p">(</span><span class="n">Batch</span><span class="p">):</span>
+    <span class="nd">@action</span>
+    <span class="k">def</span> <span class="nf">my_custom_action</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="o">...</span>
+
+    <span class="nd">@action</span>
+    <span class="k">def</span> <span class="nf">another_custom_action</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="o">...</span>
+</pre></div>
+</div>
+<p>And then create a dataset with a new batch class:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">client_dataset</span> <span class="o">=</span> <span class="n">Dataset</span><span class="p">(</span><span class="n">client_index</span><span class="p">,</span> <span class="n">batch_class</span><span class="o">=</span><span class="n">MyBatch</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="api">
+<h2>API<a class="headerlink" href="#api" title="Permalink to this headline">¶</a></h2>
+<p>See <a class="reference internal" href="../api/batchflow.dataset.html"><span class="doc">Dataset API</span></a>.</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="batch.html" title="Batch class"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="dsindex.html" title="Index"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">BatchFlow 0.3.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="classes.html" >Classes and capabilities</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2017, Analysis Center.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.1.0.
+    </div>
+  </body>
+</html>

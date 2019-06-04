@@ -1,0 +1,461 @@
+
+
+<!doctype html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>batchflow.models.tf.encoder_decoder &#8212; BatchFlow 0.3.0 documentation</title>
+    <link rel="stylesheet" href="../../../../_static/bizstyle.css" type="text/css" />
+    <link rel="stylesheet" href="../../../../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript" id="documentation_options" data-url_root="../../../../" src="../../../../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../../../../_static/jquery.js"></script>
+    <script type="text/javascript" src="../../../../_static/underscore.js"></script>
+    <script type="text/javascript" src="../../../../_static/doctools.js"></script>
+    <script type="text/javascript" src="../../../../_static/language_data.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="../../../../_static/bizstyle.js"></script>
+    <link rel="index" title="Index" href="../../../../genindex.html" />
+    <link rel="search" title="Search" href="../../../../search.html" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <!--[if lt IE 9]>
+    <script type="text/javascript" src="_static/css3-mediaqueries.js"></script>
+    <![endif]-->
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../../index.html">BatchFlow 0.3.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../../index.html" accesskey="U">Module code</a> &#187;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../../../../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <h1>Source code for batchflow.models.tf.encoder_decoder</h1><div class="highlight"><pre>
+<span></span><span class="sd">&quot;&quot;&quot;  Encoder-decoder &quot;&quot;&quot;</span>
+
+<span class="kn">import</span> <span class="nn">tensorflow</span> <span class="k">as</span> <span class="nn">tf</span>
+
+<span class="kn">from</span> <span class="nn">.layers</span> <span class="k">import</span> <span class="n">conv_block</span>
+<span class="kn">from</span> <span class="nn">.</span> <span class="k">import</span> <span class="n">TFModel</span>
+
+
+<div class="viewcode-block" id="EncoderDecoder"><a class="viewcode-back" href="../../../../api/batchflow.models.tf.encoder_decoder.html#batchflow.models.tf.encoder_decoder.EncoderDecoder">[docs]</a><span class="k">class</span> <span class="nc">EncoderDecoder</span><span class="p">(</span><span class="n">TFModel</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Encoder-decoder architecture. Allows to combine features of different models,</span>
+<span class="sd">    e.g. ResNet and DenseNet, in order to create new ones with just a few lines of code.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    inputs : dict</span>
+<span class="sd">        Dictionary with &#39;images&#39; (see :meth:`~.TFModel._make_inputs`)</span>
+
+<span class="sd">    body : dict</span>
+<span class="sd">        encoder : dict</span>
+<span class="sd">            base : TFModel</span>
+<span class="sd">                Model implementing ``make_encoder`` method which returns tensors</span>
+<span class="sd">                with encoded representation of the inputs.</span>
+
+<span class="sd">            num_stages : int</span>
+<span class="sd">                Number of downsampling stages.</span>
+
+<span class="sd">            downsample : dict</span>
+<span class="sd">                Parameters for downsampling (see :func:`~.layers.conv_block`)</span>
+
+<span class="sd">            blocks : dict</span>
+<span class="sd">                Parameters for pre-processing blocks:</span>
+
+<span class="sd">                base : callable</span>
+<span class="sd">                    Tensor processing function. Default is :func:`~.layers.conv_block`.</span>
+<span class="sd">                other args : dict</span>
+<span class="sd">                    Parameters for the base block.</span>
+
+<span class="sd">            other args : dict</span>
+<span class="sd">                Parameters for ``make_encoder`` method.</span>
+
+<span class="sd">        embedding : dict</span>
+<span class="sd">            base : callable</span>
+<span class="sd">                Tensor processing function. Default is :func:`~.layers.conv_block`.</span>
+<span class="sd">            other args</span>
+<span class="sd">                Parameters for the base block.</span>
+
+<span class="sd">        decoder : dict</span>
+<span class="sd">            num_stages : int</span>
+<span class="sd">                Number of upsampling blocks.</span>
+
+<span class="sd">            factor : int or list of int</span>
+<span class="sd">                If int, the total upsampling factor for all stages combined.</span>
+<span class="sd">                If list, upsampling factors for each stage.</span>
+
+<span class="sd">            skip : bool</span>
+<span class="sd">                Whether to concatenate upsampled tensor with stored pre-downsample encoding.</span>
+<span class="sd">            upsample : dict</span>
+<span class="sd">                Parameters for upsampling (see :func:`~.layers.upsample`).</span>
+
+<span class="sd">            blocks : dict</span>
+<span class="sd">                Parameters for post-processing blocks:</span>
+
+<span class="sd">                base : callable</span>
+<span class="sd">                    Tensor processing function. Default is :func:`~.layers.conv_block`.</span>
+<span class="sd">                other args : dict</span>
+<span class="sd">                    Parameters for the base block.</span>
+
+<span class="sd">    Examples</span>
+<span class="sd">    --------</span>
+<span class="sd">    Use ResNet as an encoder with desired number of blocks and filters in them (total downsampling factor is 4),</span>
+<span class="sd">    create an embedding that contains 256 channels, then upsample it to get 8 times the size of initial image.</span>
+
+<span class="sd">    &gt;&gt;&gt; config = {</span>
+<span class="sd">            &#39;inputs&#39;: dict(images={&#39;shape&#39;: B(&#39;image_shape&#39;)},</span>
+<span class="sd">                           masks={&#39;name&#39;: &#39;targets&#39;, &#39;shape&#39;: B(&#39;mask_shape&#39;)}),</span>
+<span class="sd">            &#39;initial_block/inputs&#39;: &#39;images&#39;,</span>
+<span class="sd">            &#39;body/encoder&#39;: {&#39;base&#39;: ResNet,</span>
+<span class="sd">                             &#39;num_blocks&#39;: [2, 3, 4]</span>
+<span class="sd">                             &#39;filters&#39;: [16, 32, 128]},</span>
+<span class="sd">            &#39;body/embedding&#39;: {&#39;layout&#39;: &#39;cna&#39;, &#39;filters&#39;: 256},</span>
+<span class="sd">            &#39;body/decoder&#39;: {&#39;num_stages&#39;: 5, &#39;factor&#39;: 32},</span>
+<span class="sd">        }</span>
+
+<span class="sd">    Preprocess input image with 7x7 convolutions, downsample it 5 times with DenseNet blocks in between,</span>
+<span class="sd">    use MobileNet block in the bottom, then restore original image size with subpixel convolutions and</span>
+<span class="sd">    ResNeXt blocks in between:</span>
+
+<span class="sd">    &gt;&gt;&gt; config = {</span>
+<span class="sd">            &#39;inputs&#39;: dict(images={&#39;shape&#39;: B(&#39;image_shape&#39;)},</span>
+<span class="sd">                           masks={&#39;name&#39;: &#39;targets&#39;, &#39;shape&#39;: B(&#39;mask_shape&#39;)}),</span>
+<span class="sd">            &#39;initial_block&#39;: {&#39;inputs&#39;: &#39;images&#39;,</span>
+<span class="sd">                              &#39;layout&#39;: &#39;cna&#39;, &#39;filters&#39;: 4, &#39;kernel_size&#39;: 7},</span>
+<span class="sd">            &#39;body/encoder&#39;: {&#39;num_stages&#39;: 5,</span>
+<span class="sd">                             &#39;blocks&#39;: {&#39;base&#39;: DenseNet.block,</span>
+<span class="sd">                                        &#39;num_layers&#39;: [2, 2, 3, 4, 5],</span>
+<span class="sd">                                        &#39;growth_rate&#39;: 6, &#39;skip&#39;: True}},</span>
+<span class="sd">            &#39;body/embedding&#39;: {&#39;base&#39;: MobileNet.block,</span>
+<span class="sd">                               &#39;width_factor&#39;: 2},</span>
+<span class="sd">            &#39;body/decoder&#39;: {&#39;upsample&#39;: {&#39;layout&#39;: &#39;X&#39;},</span>
+<span class="sd">                             &#39;blocks&#39;: {&#39;base&#39;: ResNet.block,</span>
+<span class="sd">                                        &#39;filters&#39;: [256, 128, 64, 32, 16],</span>
+<span class="sd">                                        &#39;resnext&#39;: True}},</span>
+<span class="sd">        }</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    When `base` is used for decoder creation, downsampling is done one less time than</span>
+<span class="sd">    the length of `filters` (or other size-defining parameter) list in the `encoder` configuration.</span>
+<span class="sd">    That is due to the fact that the first block is used as preprocessing of input tensors.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+<div class="viewcode-block" id="EncoderDecoder.default_config"><a class="viewcode-back" href="../../../../api/batchflow.models.tf.encoder_decoder.html#batchflow.models.tf.encoder_decoder.EncoderDecoder.default_config">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">default_config</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
+        <span class="n">config</span> <span class="o">=</span> <span class="n">TFModel</span><span class="o">.</span><span class="n">default_config</span><span class="p">()</span>
+        <span class="n">config</span><span class="p">[</span><span class="s1">&#39;body/encoder&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">base</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">num_stages</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+        <span class="n">config</span><span class="p">[</span><span class="s1">&#39;body/encoder/downsample&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">layout</span><span class="o">=</span><span class="s1">&#39;p&#39;</span><span class="p">,</span> <span class="n">pool_size</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">pool_strides</span><span class="o">=</span><span class="mi">2</span><span class="p">)</span>
+        <span class="n">config</span><span class="p">[</span><span class="s1">&#39;body/encoder/blocks&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">base</span><span class="o">=</span><span class="bp">cls</span><span class="o">.</span><span class="n">block</span><span class="p">)</span>
+        <span class="n">config</span><span class="p">[</span><span class="s1">&#39;body/embedding&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">base</span><span class="o">=</span><span class="bp">cls</span><span class="o">.</span><span class="n">block</span><span class="p">)</span>
+        <span class="n">config</span><span class="p">[</span><span class="s1">&#39;body/decoder&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">skip</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">num_stages</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">factor</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
+        <span class="n">config</span><span class="p">[</span><span class="s1">&#39;body/decoder/upsample&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">layout</span><span class="o">=</span><span class="s1">&#39;tna&#39;</span><span class="p">)</span>
+        <span class="n">config</span><span class="p">[</span><span class="s1">&#39;body/decoder/blocks&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">base</span><span class="o">=</span><span class="bp">cls</span><span class="o">.</span><span class="n">block</span><span class="p">)</span>
+        <span class="n">config</span><span class="p">[</span><span class="s1">&#39;head&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">layout</span><span class="o">=</span><span class="s1">&#39;c&#39;</span><span class="p">,</span> <span class="n">kernel_size</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">config</span></div>
+
+
+<div class="viewcode-block" id="EncoderDecoder.build_config"><a class="viewcode-back" href="../../../../api/batchflow.models.tf.encoder_decoder.html#batchflow.models.tf.encoder_decoder.EncoderDecoder.build_config">[docs]</a>    <span class="k">def</span> <span class="nf">build_config</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">names</span><span class="o">=</span><span class="kc">None</span><span class="p">):</span>
+        <span class="n">config</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">build_config</span><span class="p">(</span><span class="n">names</span><span class="p">)</span>
+        <span class="n">config</span><span class="p">[</span><span class="s1">&#39;head&#39;</span><span class="p">][</span><span class="s1">&#39;targets&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">targets</span>
+        <span class="k">return</span> <span class="n">config</span></div>
+
+
+<div class="viewcode-block" id="EncoderDecoder.body"><a class="viewcode-back" href="../../../../api/batchflow.models.tf.encoder_decoder.html#batchflow.models.tf.encoder_decoder.EncoderDecoder.body">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">body</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">inputs</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;body&#39;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Create encoder, embedding and decoder. &quot;&quot;&quot;</span>
+        <span class="n">kwargs</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">fill_params</span><span class="p">(</span><span class="s1">&#39;body&#39;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="n">encoder</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;encoder&#39;</span><span class="p">)</span>
+        <span class="n">embedding</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;embedding&#39;</span><span class="p">)</span>
+        <span class="n">decoder</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;decoder&#39;</span><span class="p">)</span>
+
+        <span class="k">with</span> <span class="n">tf</span><span class="o">.</span><span class="n">variable_scope</span><span class="p">(</span><span class="n">name</span><span class="p">):</span>
+            <span class="c1"># Encoder: transition down</span>
+            <span class="n">encoder_outputs</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">encoder</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="o">**</span><span class="n">encoder</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+            <span class="c1"># Bottleneck: working with compressed representation</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">embedding</span><span class="p">(</span><span class="n">encoder_outputs</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="o">**</span><span class="n">embedding</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+            <span class="n">encoder_outputs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+
+            <span class="c1"># Decoder: transition up</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">decoder</span><span class="p">(</span><span class="n">encoder_outputs</span><span class="p">,</span> <span class="o">**</span><span class="n">decoder</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">x</span></div>
+
+
+<div class="viewcode-block" id="EncoderDecoder.head"><a class="viewcode-back" href="../../../../api/batchflow.models.tf.encoder_decoder.html#batchflow.models.tf.encoder_decoder.EncoderDecoder.head">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">head</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">inputs</span><span class="p">,</span> <span class="n">targets</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;head&#39;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Linear convolutions. &quot;&quot;&quot;</span>
+        <span class="n">kwargs</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">fill_params</span><span class="p">(</span><span class="s1">&#39;head&#39;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">with</span> <span class="n">tf</span><span class="o">.</span><span class="n">variable_scope</span><span class="p">(</span><span class="n">name</span><span class="p">):</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">crop</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">targets</span><span class="p">,</span> <span class="n">kwargs</span><span class="p">[</span><span class="s1">&#39;data_format&#39;</span><span class="p">])</span>
+            <span class="n">channels</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">num_channels</span><span class="p">(</span><span class="n">targets</span><span class="p">)</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="n">conv_block</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">filters</span><span class="o">=</span><span class="n">channels</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">x</span></div>
+
+
+<div class="viewcode-block" id="EncoderDecoder.block"><a class="viewcode-back" href="../../../../api/batchflow.models.tf.encoder_decoder.html#batchflow.models.tf.encoder_decoder.EncoderDecoder.block">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">block</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">inputs</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;block&#39;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Default conv block for processing tensors in encoder and decoder.</span>
+<span class="sd">        By default makes 3x3 convolutions followed by batch-norm and activation.</span>
+<span class="sd">        Does not change tensor shapes.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">layout</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;layout&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">or</span> <span class="s1">&#39;cna&#39;</span>
+        <span class="n">filters</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;filters&#39;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span> <span class="ow">or</span> <span class="bp">cls</span><span class="o">.</span><span class="n">num_channels</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">conv_block</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">layout</span><span class="o">=</span><span class="n">layout</span><span class="p">,</span> <span class="n">filters</span><span class="o">=</span><span class="n">filters</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="EncoderDecoder.encoder"><a class="viewcode-back" href="../../../../api/batchflow.models.tf.encoder_decoder.html#batchflow.models.tf.encoder_decoder.EncoderDecoder.encoder">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">encoder</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">inputs</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;encoder&#39;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Create encoder either by using ``make_encoder`` of passed `base` model,</span>
+<span class="sd">        or by combining building blocks, specified in `blocks/base`.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        inputs : tf.Tensor</span>
+<span class="sd">            Input tensor.</span>
+
+<span class="sd">        base : TFModel</span>
+<span class="sd">            Model class. Should implement ``make_encoder`` method.</span>
+
+<span class="sd">        name : str</span>
+<span class="sd">            Scope name.</span>
+
+<span class="sd">        num_stages : int</span>
+<span class="sd">            Number of downsampling stages.</span>
+
+<span class="sd">        blocks : dict</span>
+<span class="sd">            Parameters for tensor processing before downsampling.</span>
+
+<span class="sd">        downsample : dict</span>
+<span class="sd">            Parameters for downsampling.</span>
+
+<span class="sd">        kwargs : dict</span>
+<span class="sd">            Parameters for ``make_encoder`` method.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        list of tf.Tensors</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">base_class</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;base&#39;</span><span class="p">)</span>
+        <span class="n">steps</span><span class="p">,</span> <span class="n">downsample</span><span class="p">,</span> <span class="n">block_args</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">pop</span><span class="p">([</span><span class="s1">&#39;num_stages&#39;</span><span class="p">,</span> <span class="s1">&#39;downsample&#39;</span><span class="p">,</span> <span class="s1">&#39;blocks&#39;</span><span class="p">],</span> <span class="n">kwargs</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">base_class</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
+            <span class="n">encoder_outputs</span> <span class="o">=</span> <span class="n">base_class</span><span class="o">.</span><span class="n">make_encoder</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">base_block</span> <span class="o">=</span> <span class="n">block_args</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;base&#39;</span><span class="p">)</span>
+            <span class="k">with</span> <span class="n">tf</span><span class="o">.</span><span class="n">variable_scope</span><span class="p">(</span><span class="n">name</span><span class="p">):</span>
+                <span class="n">x</span> <span class="o">=</span> <span class="n">inputs</span>
+                <span class="n">encoder_outputs</span> <span class="o">=</span> <span class="p">[</span><span class="n">x</span><span class="p">]</span>
+
+                <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">steps</span><span class="p">):</span>
+                    <span class="k">with</span> <span class="n">tf</span><span class="o">.</span><span class="n">variable_scope</span><span class="p">(</span><span class="s1">&#39;encoder-&#39;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">)):</span>
+                        <span class="c1"># Preprocess tensor with given block</span>
+                        <span class="n">args</span> <span class="o">=</span> <span class="p">{</span><span class="n">key</span><span class="p">:</span> <span class="n">value</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">block_args</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+                                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">list</span><span class="p">)}</span>
+                        <span class="n">args</span> <span class="o">=</span> <span class="p">{</span><span class="o">**</span><span class="n">kwargs</span><span class="p">,</span> <span class="o">**</span><span class="n">block_args</span><span class="p">,</span> <span class="o">**</span><span class="n">args</span><span class="p">}</span> <span class="c1"># enforce priority of keys</span>
+                        <span class="n">x</span> <span class="o">=</span> <span class="n">base_block</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;pre&#39;</span><span class="p">,</span> <span class="o">**</span><span class="n">args</span><span class="p">)</span>
+
+                        <span class="c1"># Downsampling</span>
+                        <span class="n">x</span> <span class="o">=</span> <span class="n">conv_block</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="o">**</span><span class="p">{</span><span class="o">**</span><span class="n">kwargs</span><span class="p">,</span> <span class="o">**</span><span class="n">downsample</span><span class="p">})</span>
+                        <span class="n">encoder_outputs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">x</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">encoder_outputs</span></div>
+
+
+<div class="viewcode-block" id="EncoderDecoder.embedding"><a class="viewcode-back" href="../../../../api/batchflow.models.tf.encoder_decoder.html#batchflow.models.tf.encoder_decoder.EncoderDecoder.embedding">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">embedding</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">inputs</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;embedding&#39;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Create embedding from inputs tensor.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        inputs : tf.Tensor</span>
+<span class="sd">            Input tensor.</span>
+
+<span class="sd">        name : str</span>
+<span class="sd">            Scope name.</span>
+
+<span class="sd">        base : callable</span>
+<span class="sd">            Tensor processing function. Default is :func:`~.layers.conv_block`.</span>
+
+<span class="sd">        kwargs : dict</span>
+<span class="sd">            Parameters for `base` block.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        tf.Tensor</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">base_block</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;base&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">base_block</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="n">name</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span></div>
+
+
+<div class="viewcode-block" id="EncoderDecoder.decoder"><a class="viewcode-back" href="../../../../api/batchflow.models.tf.encoder_decoder.html#batchflow.models.tf.encoder_decoder.EncoderDecoder.decoder">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">decoder</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">inputs</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;decoder&#39;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Create decoder with a given number of upsampling stages.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        inputs : tf.Tensor</span>
+<span class="sd">            Input tensor.</span>
+
+<span class="sd">        name : str</span>
+<span class="sd">            Scope name.</span>
+
+<span class="sd">        steps : int</span>
+<span class="sd">            Number of upsampling stages. Defaults to the number of downsamplings.</span>
+
+<span class="sd">        factor : int or list of ints</span>
+<span class="sd">            If int, the total upsampling factor for all stages combined.</span>
+<span class="sd">            If list, upsampling factors for each stage.s, then each entry is increase of size on i-th upsampling stage.</span>
+
+<span class="sd">        skip : bool</span>
+<span class="sd">            Whether to concatenate upsampled tensor with stored pre-downsample encoding.</span>
+
+<span class="sd">        upsample : dict</span>
+<span class="sd">            Parameters for upsampling.</span>
+
+<span class="sd">        blocks : dict</span>
+<span class="sd">            Parameters for post-processing blocks.</span>
+
+<span class="sd">        kwargs : dict</span>
+<span class="sd">            Parameters for ``upsample`` method.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        tf.Tensor</span>
+
+<span class="sd">        Raises</span>
+<span class="sd">        ------</span>
+<span class="sd">        TypeError</span>
+<span class="sd">            If passed `factor` is not integer or list.</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">steps</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;num_stages&#39;</span><span class="p">)</span> <span class="ow">or</span> <span class="nb">len</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span><span class="o">-</span><span class="mi">2</span>
+        <span class="n">factor</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="s1">&#39;factor&#39;</span><span class="p">)</span> <span class="ow">or</span> <span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">*</span><span class="n">steps</span>
+        <span class="n">skip</span><span class="p">,</span> <span class="n">upsample</span><span class="p">,</span> <span class="n">block_args</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">pop</span><span class="p">([</span><span class="s1">&#39;skip&#39;</span><span class="p">,</span> <span class="s1">&#39;upsample&#39;</span><span class="p">,</span> <span class="s1">&#39;blocks&#39;</span><span class="p">],</span> <span class="n">kwargs</span><span class="p">)</span>
+        <span class="n">base_block</span> <span class="o">=</span> <span class="n">block_args</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;base&#39;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">factor</span><span class="p">,</span> <span class="nb">int</span><span class="p">):</span>
+            <span class="n">factor</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">factor</span> <span class="o">**</span> <span class="p">(</span><span class="mi">1</span><span class="o">/</span><span class="n">steps</span><span class="p">))</span>
+            <span class="n">factor</span> <span class="o">=</span> <span class="p">[</span><span class="n">factor</span><span class="p">]</span> <span class="o">*</span> <span class="n">steps</span>
+        <span class="k">elif</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">factor</span><span class="p">,</span> <span class="nb">list</span><span class="p">):</span>
+            <span class="k">raise</span> <span class="ne">TypeError</span><span class="p">(</span><span class="s1">&#39;factor should be int or list of int, but </span><span class="si">%s</span><span class="s1"> was given&#39;</span> <span class="o">%</span> <span class="nb">type</span><span class="p">(</span><span class="n">factor</span><span class="p">))</span>
+
+        <span class="k">with</span> <span class="n">tf</span><span class="o">.</span><span class="n">variable_scope</span><span class="p">(</span><span class="n">name</span><span class="p">):</span>
+            <span class="n">x</span> <span class="o">=</span> <span class="n">inputs</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+
+            <span class="n">axis</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">channels_axis</span><span class="p">(</span><span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;data_format&#39;</span><span class="p">))</span>
+            <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">steps</span><span class="p">):</span>
+                <span class="k">with</span> <span class="n">tf</span><span class="o">.</span><span class="n">variable_scope</span><span class="p">(</span><span class="s1">&#39;decoder-&#39;</span><span class="o">+</span><span class="nb">str</span><span class="p">(</span><span class="n">i</span><span class="p">)):</span>
+                    <span class="c1"># Upsample by a desired factor</span>
+                    <span class="n">x</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">upsample</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">factor</span><span class="o">=</span><span class="n">factor</span><span class="p">[</span><span class="n">i</span><span class="p">],</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;upsample&#39;</span><span class="p">,</span> <span class="o">**</span><span class="p">{</span><span class="o">**</span><span class="n">kwargs</span><span class="p">,</span> <span class="o">**</span><span class="n">upsample</span><span class="p">})</span>
+
+                    <span class="c1"># Post-process resulting tensor</span>
+                    <span class="n">args</span> <span class="o">=</span> <span class="p">{</span><span class="n">key</span><span class="p">:</span> <span class="n">value</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="k">for</span> <span class="n">key</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">block_args</span><span class="o">.</span><span class="n">items</span><span class="p">()</span>
+                            <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">value</span><span class="p">,</span> <span class="nb">list</span><span class="p">)}</span>
+                    <span class="n">args</span> <span class="o">=</span> <span class="p">{</span><span class="o">**</span><span class="n">kwargs</span><span class="p">,</span> <span class="o">**</span><span class="n">block_args</span><span class="p">,</span> <span class="o">**</span><span class="n">args</span><span class="p">}</span> <span class="c1"># enforce priority of subkeys</span>
+                    <span class="n">x</span> <span class="o">=</span> <span class="n">base_block</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;post&#39;</span><span class="p">,</span> <span class="o">**</span><span class="n">args</span><span class="p">)</span>
+
+                    <span class="c1"># Concatenate it with stored encoding of the ~same shape</span>
+                    <span class="k">if</span> <span class="n">skip</span> <span class="ow">and</span> <span class="p">(</span><span class="n">i</span> <span class="o">&lt;</span> <span class="nb">len</span><span class="p">(</span><span class="n">inputs</span><span class="p">)</span><span class="o">-</span><span class="mi">2</span><span class="p">):</span>
+                        <span class="n">x</span> <span class="o">=</span> <span class="bp">cls</span><span class="o">.</span><span class="n">crop</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">inputs</span><span class="p">[</span><span class="o">-</span><span class="n">i</span><span class="o">-</span><span class="mi">3</span><span class="p">],</span> <span class="n">data_format</span><span class="o">=</span><span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;data_format&#39;</span><span class="p">))</span>
+                        <span class="n">x</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">concat</span><span class="p">((</span><span class="n">x</span><span class="p">,</span> <span class="n">inputs</span><span class="p">[</span><span class="o">-</span><span class="n">i</span><span class="o">-</span><span class="mi">3</span><span class="p">]),</span> <span class="n">axis</span><span class="o">=</span><span class="n">axis</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;skip-concat&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">x</span></div></div>
+
+
+<div class="viewcode-block" id="AutoEncoder"><a class="viewcode-back" href="../../../../api/batchflow.models.tf.encoder_decoder.html#batchflow.models.tf.encoder_decoder.AutoEncoder">[docs]</a><span class="k">class</span> <span class="nc">AutoEncoder</span><span class="p">(</span><span class="n">EncoderDecoder</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Model without skip-connections between corresponding stages of encoder and decoder. &quot;&quot;&quot;</span>
+<div class="viewcode-block" id="AutoEncoder.default_config"><a class="viewcode-back" href="../../../../api/batchflow.models.tf.encoder_decoder.html#batchflow.models.tf.encoder_decoder.AutoEncoder.default_config">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">default_config</span><span class="p">(</span><span class="bp">cls</span><span class="p">):</span>
+        <span class="n">config</span> <span class="o">=</span> <span class="n">EncoderDecoder</span><span class="o">.</span><span class="n">default_config</span><span class="p">()</span>
+        <span class="n">config</span><span class="p">[</span><span class="s1">&#39;body/decoder&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="nb">dict</span><span class="p">(</span><span class="n">skip</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">config</span></div></div>
+
+
+<div class="viewcode-block" id="VariationalAutoEncoder"><a class="viewcode-back" href="../../../../api/batchflow.models.tf.encoder_decoder.html#batchflow.models.tf.encoder_decoder.VariationalAutoEncoder">[docs]</a><span class="k">class</span> <span class="nc">VariationalAutoEncoder</span><span class="p">(</span><span class="n">AutoEncoder</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot; Autoencoder that maps input into distribution. Based on</span>
+<span class="sd">    Kingma, Diederik P; Welling, Max &quot;`Auto-Encoding Variational Bayes</span>
+<span class="sd">    &lt;https://arxiv.org/abs/1312.6114&gt;`_&quot;</span>
+
+<span class="sd">    Notes</span>
+<span class="sd">    -----</span>
+<span class="sd">    Distribution that is learned is always normal.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+<div class="viewcode-block" id="VariationalAutoEncoder.embedding"><a class="viewcode-back" href="../../../../api/batchflow.models.tf.encoder_decoder.html#batchflow.models.tf.encoder_decoder.VariationalAutoEncoder.embedding">[docs]</a>    <span class="nd">@classmethod</span>
+    <span class="k">def</span> <span class="nf">embedding</span><span class="p">(</span><span class="bp">cls</span><span class="p">,</span> <span class="n">inputs</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;embedding&#39;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&quot;&quot;&quot; Create embedding from inputs tensor.</span>
+
+<span class="sd">        Parameters</span>
+<span class="sd">        ----------</span>
+<span class="sd">        inputs : tf.Tensor</span>
+<span class="sd">            Input tensor.</span>
+
+<span class="sd">        name : str</span>
+<span class="sd">            Scope name.</span>
+
+<span class="sd">        base : callable</span>
+<span class="sd">            Tensor processing function. Default is :func:`~.layers.conv_block`.</span>
+
+<span class="sd">        kwargs : dict</span>
+<span class="sd">            Parameters for `base` block.</span>
+
+<span class="sd">        Returns</span>
+<span class="sd">        -------</span>
+<span class="sd">        tf.Tensor</span>
+<span class="sd">        &quot;&quot;&quot;</span>
+        <span class="n">base_block</span> <span class="o">=</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s1">&#39;base&#39;</span><span class="p">)</span>
+
+        <span class="n">mean</span> <span class="o">=</span> <span class="n">base_block</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;mean&#39;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="n">std</span> <span class="o">=</span> <span class="n">base_block</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;std&#39;</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+        <span class="n">eps</span> <span class="o">=</span> <span class="n">tf</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">normal</span><span class="p">(</span><span class="n">shape</span><span class="o">=</span><span class="n">tf</span><span class="o">.</span><span class="n">shape</span><span class="p">(</span><span class="n">mean</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">mean</span> <span class="o">+</span> <span class="n">eps</span><span class="o">*</span><span class="n">std</span></div></div>
+</pre></div>
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../../../../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../../../../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../../../../index.html">BatchFlow 0.3.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="../../../index.html" >Module code</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2017, Analysis Center.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.1.0.
+    </div>
+  </body>
+</html>

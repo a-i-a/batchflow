@@ -1,0 +1,214 @@
+
+
+<!doctype html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>Inter-batch parallelism &#8212; BatchFlow 0.3.0 documentation</title>
+    <link rel="stylesheet" href="../_static/bizstyle.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="../_static/bizstyle.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Working with models" href="models.html" />
+    <link rel="prev" title="Within batch parallelism" href="parallel.html" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <!--[if lt IE 9]>
+    <script type="text/javascript" src="_static/css3-mediaqueries.js"></script>
+    <![endif]-->
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="models.html" title="Working with models"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="parallel.html" title="Within batch parallelism"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">BatchFlow 0.3.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="classes.html" accesskey="U">Classes and capabilities</a> &#187;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h3><a href="../index.html">Table of Contents</a></h3>
+  <ul>
+<li><a class="reference internal" href="#">Inter-batch parallelism</a><ul>
+<li><a class="reference internal" href="#blocked-method">Blocked method</a></li>
+</ul>
+</li>
+</ul>
+
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="parallel.html"
+                        title="previous chapter">Within batch parallelism</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="models.html"
+                        title="next chapter">Working with models</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/intro/prefetch.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="inter-batch-parallelism">
+<h1>Inter-batch parallelism<a class="headerlink" href="#inter-batch-parallelism" title="Permalink to this headline">¶</a></h1>
+<p>For long-running <a class="reference internal" href="pipeline.html"><span class="doc">pipelines</span></a> you might employ a <cite>prefetch</cite> feature which allows for a parallel batch processing.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">for</span> <span class="n">batch</span> <span class="ow">in</span> <span class="n">some_pipeline</span><span class="o">.</span><span class="n">gen_batch</span><span class="p">(</span><span class="n">BATCH_SIZE</span><span class="p">,</span> <span class="n">prefetch</span><span class="o">=</span><span class="mi">3</span><span class="p">):</span>
+    <span class="o">...</span>
+</pre></div>
+</div>
+<p>This line states that 3 additional batches should be processed in the background.
+Take into account that all the batches will be processed simultaneously without any prioritization.
+However, the order of batches is preserved, i.e. batch #2 would be returned after batch #1 even if all the actions for batch #2 finished earlier. This statement is correct even for shuffled order (though it might seem illogical to some people).</p>
+<p>Let’s look at an example. Here is a simple pipeline:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">some_pipeline</span> <span class="o">=</span> <span class="n">some_dataset</span><span class="o">.</span><span class="n">p</span><span class="o">.</span><span class="n">action1</span><span class="p">()</span><span class="o">.</span><span class="n">action2</span><span class="p">()</span><span class="o">.</span><span class="n">action3</span><span class="p">()</span>
+</pre></div>
+</div>
+<p>At first, we run it without <cite>prefetch</cite>:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">for</span> <span class="n">batch</span> <span class="ow">in</span> <span class="n">some_pipeline</span><span class="o">.</span><span class="n">gen_batch</span><span class="p">(</span><span class="n">BATCH_SIZE</span><span class="p">):</span>
+    <span class="o">...</span>
+</pre></div>
+</div>
+<p>The execution sequence will look as follows:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">batch</span> <span class="c1">#1 is created</span>
+    <span class="n">action</span> <span class="mi">1</span> <span class="n">started</span>
+    <span class="n">action</span> <span class="mi">1</span> <span class="n">finished</span>
+    <span class="n">action</span> <span class="mi">2</span> <span class="n">started</span>
+    <span class="n">action</span> <span class="mi">2</span> <span class="n">finished</span>
+    <span class="n">action</span> <span class="mi">3</span> <span class="n">started</span>
+    <span class="n">action</span> <span class="mi">3</span> <span class="n">finished</span>
+<span class="n">batch</span> <span class="c1">#2 is created</span>
+    <span class="n">action</span> <span class="mi">1</span> <span class="n">started</span>
+    <span class="n">action</span> <span class="mi">1</span> <span class="n">finished</span>
+    <span class="n">action</span> <span class="mi">2</span> <span class="n">started</span>
+    <span class="n">action</span> <span class="mi">2</span> <span class="n">finished</span>
+    <span class="n">action</span> <span class="mi">3</span> <span class="n">started</span>
+    <span class="n">action</span> <span class="mi">3</span> <span class="n">finished</span>
+<span class="n">batch</span> <span class="c1">#3 is created</span>
+    <span class="n">action</span> <span class="mi">1</span> <span class="n">started</span>
+    <span class="n">action</span> <span class="mi">1</span> <span class="n">finished</span>
+    <span class="n">action</span> <span class="mi">2</span> <span class="n">started</span>
+    <span class="n">action</span> <span class="mi">2</span> <span class="n">finished</span>
+    <span class="n">action</span> <span class="mi">3</span> <span class="n">started</span>
+    <span class="n">action</span> <span class="mi">3</span> <span class="n">finished</span>
+</pre></div>
+</div>
+<p>So, all the batches start one after another, and all the actions also start one after another.</p>
+<p>Now use <cite>prefetch</cite>:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">for</span> <span class="n">batch</span> <span class="ow">in</span> <span class="n">some_pipeline</span><span class="o">.</span><span class="n">gen_batch</span><span class="p">(</span><span class="n">BATCH_SIZE</span><span class="p">,</span> <span class="n">prefetch</span><span class="o">=</span><span class="mi">1</span><span class="p">):</span>
+    <span class="o">...</span>
+</pre></div>
+</div>
+<p>This changes the execution sequence dramatically:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">batch</span> <span class="c1">#1 is created</span>
+<span class="n">batch</span> <span class="c1">#2 is created</span>
+    <span class="n">action</span> <span class="mi">1</span> <span class="n">started</span> <span class="k">for</span> <span class="n">batch</span> <span class="c1">#1</span>
+    <span class="n">action</span> <span class="mi">1</span> <span class="n">started</span> <span class="k">for</span> <span class="n">batch</span> <span class="c1">#2</span>
+    <span class="n">action</span> <span class="mi">1</span> <span class="n">finished</span> <span class="k">for</span> <span class="n">batch</span> <span class="c1">#1</span>
+    <span class="n">action</span> <span class="mi">2</span> <span class="n">started</span> <span class="k">for</span> <span class="n">batch</span> <span class="c1">#1</span>
+    <span class="n">action</span> <span class="mi">1</span> <span class="n">finished</span> <span class="k">for</span> <span class="n">batch</span> <span class="c1">#2</span>
+    <span class="n">action</span> <span class="mi">2</span> <span class="n">started</span> <span class="k">for</span> <span class="n">batch</span> <span class="c1">#2</span>
+    <span class="n">action</span> <span class="mi">2</span> <span class="n">finished</span> <span class="k">for</span> <span class="n">batch</span> <span class="c1">#1</span>
+    <span class="n">action</span> <span class="mi">3</span> <span class="n">started</span> <span class="k">for</span> <span class="n">batch</span> <span class="c1">#1</span>
+    <span class="n">action</span> <span class="mi">2</span> <span class="n">finished</span> <span class="k">for</span> <span class="n">batch</span> <span class="c1">#2</span>
+    <span class="n">action</span> <span class="mi">3</span> <span class="n">started</span> <span class="k">for</span> <span class="n">batch</span> <span class="c1">#2</span>
+    <span class="n">action</span> <span class="mi">3</span> <span class="n">finished</span> <span class="k">for</span> <span class="n">batch</span> <span class="c1">#1</span>
+<span class="n">batch</span> <span class="c1">#3 is created</span>
+    <span class="n">action</span> <span class="mi">1</span> <span class="n">started</span> <span class="k">for</span> <span class="n">batch</span> <span class="c1">#3</span>
+    <span class="n">action</span> <span class="mi">3</span> <span class="n">finished</span> <span class="k">for</span> <span class="n">batch</span> <span class="c1">#2 &lt;-- after that batch #4 could start</span>
+    <span class="n">action</span> <span class="mi">1</span> <span class="n">finished</span> <span class="k">for</span> <span class="n">batch</span> <span class="c1">#3</span>
+    <span class="n">action</span> <span class="mi">2</span> <span class="n">started</span> <span class="k">for</span> <span class="n">batch</span> <span class="c1">#3</span>
+    <span class="n">action</span> <span class="mi">2</span> <span class="n">finished</span> <span class="k">for</span> <span class="n">batch</span> <span class="c1">#3</span>
+    <span class="n">action</span> <span class="mi">3</span> <span class="n">started</span> <span class="k">for</span> <span class="n">batch</span> <span class="c1">#3</span>
+    <span class="n">action</span> <span class="mi">3</span> <span class="n">finished</span> <span class="k">for</span> <span class="n">batch</span> <span class="c1">#3</span>
+</pre></div>
+</div>
+<p>Batch #2 is created immediately after batch #1. Then all the actions are executed for all running batches.
+As actions execution time might vary between batches, the actual sequence might look different in your case.</p>
+<p>However, the main principle remains the same - <cite>prefetch</cite> parameter indicates how many additional batches should be processed in advance, before you need them. As a consequence, when you need them, they will be returned much faster or even almost immediately (if all the actions have been executed already).</p>
+<p>You can use <cite>prefetch</cite> in <cite>next_batch</cite>, <cite>gen_batch</cite> and <cite>run</cite>.</p>
+<div class="section" id="blocked-method">
+<h2>Blocked method<a class="headerlink" href="#blocked-method" title="Permalink to this headline">¶</a></h2>
+<p>Sometimes you might want to guarantee that only one call of a specific action is executed simultaneously, e.g. due to a race condition or dependence on some external resources. To make this happen provide a lock to an action:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">class</span> <span class="nc">MyBatch</span><span class="p">(</span><span class="n">Batch</span><span class="p">):</span>
+    <span class="o">...</span>
+    <span class="nd">@action</span><span class="p">(</span><span class="n">use_lock</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">only_one</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="o">...</span>
+    <span class="o">...</span>
+
+    <span class="nd">@action</span><span class="p">(</span><span class="n">use_lock</span><span class="o">=</span><span class="s2">&quot;unique_lock_name&quot;</span><span class="p">)</span>
+    <span class="k">def</span> <span class="nf">also_one</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="o">...</span>
+</pre></div>
+</div>
+<p>Thus, whenever you make prefetching, only one batch at a time will execute <cite>only_one</cite> action.</p>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="models.html" title="Working with models"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="parallel.html" title="Within batch parallelism"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">BatchFlow 0.3.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="classes.html" >Classes and capabilities</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2017, Analysis Center.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.1.0.
+    </div>
+  </body>
+</html>

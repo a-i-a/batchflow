@@ -1,0 +1,868 @@
+
+
+<!doctype html>
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta charset="utf-8" />
+    <title>batchflow.models.tf.layers &#8212; BatchFlow 0.3.0 documentation</title>
+    <link rel="stylesheet" href="../_static/bizstyle.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
+    <script async="async" type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.5/latest.js?config=TeX-AMS-MML_HTMLorMML"></script>
+    <script type="text/javascript" src="../_static/bizstyle.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="batchflow.models.tf.losses" href="batchflow.models.tf.losses.html" />
+    <link rel="prev" title="batchflow.models.tf" href="batchflow.models.tf.html" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0">
+    <!--[if lt IE 9]>
+    <script type="text/javascript" src="_static/css3-mediaqueries.js"></script>
+    <![endif]-->
+  </head><body>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             accesskey="I">index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="batchflow.models.tf.losses.html" title="batchflow.models.tf.losses"
+             accesskey="N">next</a> |</li>
+        <li class="right" >
+          <a href="batchflow.models.tf.html" title="batchflow.models.tf"
+             accesskey="P">previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">BatchFlow 0.3.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="batchflow.html" >API</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="batchflow.models.html" >batchflow.models</a> &#187;</li>
+          <li class="nav-item nav-item-3"><a href="batchflow.models.tf.html" accesskey="U">batchflow.models.tf</a> &#187;</li> 
+      </ul>
+    </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+  <h4>Previous topic</h4>
+  <p class="topless"><a href="batchflow.models.tf.html"
+                        title="previous chapter">batchflow.models.tf</a></p>
+  <h4>Next topic</h4>
+  <p class="topless"><a href="batchflow.models.tf.losses.html"
+                        title="next chapter">batchflow.models.tf.losses</a></p>
+  <div role="note" aria-label="source link">
+    <h3>This Page</h3>
+    <ul class="this-page-menu">
+      <li><a href="../_sources/api/batchflow.models.tf.layers.rst.txt"
+            rel="nofollow">Show Source</a></li>
+    </ul>
+   </div>
+<div id="searchbox" style="display: none" role="search">
+  <h3 id="searchlabel">Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" aria-labelledby="searchlabel" />
+      <input type="submit" value="Go" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="module-batchflow.models.tf.layers">
+<span id="batchflow-models-tf-layers"></span><h1>batchflow.models.tf.layers<a class="headerlink" href="#module-batchflow.models.tf.layers" title="Permalink to this headline">¶</a></h1>
+<p>Custom tf layers and operations</p>
+<dl class="function">
+<dt id="batchflow.models.tf.layers.alpha_dropout">
+<code class="sig-name descname">alpha_dropout</code><span class="sig-paren">(</span><em class="sig-param">inputs</em>, <em class="sig-param">rate=0.5</em>, <em class="sig-param">noise_shape=None</em>, <em class="sig-param">seed=None</em>, <em class="sig-param">training=False</em>, <em class="sig-param">name=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/batchflow/models/tf/layers/core.html#alpha_dropout"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#batchflow.models.tf.layers.alpha_dropout" title="Permalink to this definition">¶</a></dt>
+<dd><p>Alpha dropout layer</p>
+<p>Alpha Dropout is a dropout that maintains the self-normalizing property.
+For an input with zero mean and unit standard deviation, the output of Alpha Dropout maintains
+the original mean and standard deviation of the input.</p>
+<p>Klambauer G. et al “<a class="reference external" href="https://arxiv.org/abs/1706.02515">Self-Normalizing Neural Networks</a>”</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="batchflow.models.tf.layers.aspp">
+<code class="sig-name descname">aspp</code><span class="sig-paren">(</span><em class="sig-param">inputs</em>, <em class="sig-param">layout='cna'</em>, <em class="sig-param">filters=None</em>, <em class="sig-param">kernel_size=3</em>, <em class="sig-param">rates=(6</em>, <em class="sig-param">12</em>, <em class="sig-param">18)</em>, <em class="sig-param">image_level_features=2</em>, <em class="sig-param">name='aspp'</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/batchflow/models/tf/layers/pyramid.html#aspp"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#batchflow.models.tf.layers.aspp" title="Permalink to this definition">¶</a></dt>
+<dd><p>Atrous Spatial Pyramid Pooling module</p>
+<p>Chen L. et al. “<a class="reference external" href="https://arxiv.org/abs/1706.05587">Rethinking Atrous Convolution for Semantic Image Segmentation</a>”</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>inputs</strong> (<em>tf.Tensor</em>) – input tensor</p></li>
+<li><p><strong>layout</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)"><em>str</em></a>) – layout for convolution layers</p></li>
+<li><p><strong>filters</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.7)"><em>int</em></a>) – the number of filters in the output tensor</p></li>
+<li><p><strong>kernel_size</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.7)"><em>int</em></a>) – kernel size for dilated branches (default=3)</p></li>
+<li><p><strong>rates</strong> (<em>tuple of int</em>) – dilation rates for branches, default=(6, 12, 18)</p></li>
+<li><p><strong>image_level_features</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.7)"><em>int</em></a><em> or </em><em>tuple of int</em>) – <p>the number of image level features in each dimension.</p>
+<p>Default is 2, i.e. 2x2=4 pooling features will be calculated for 2d images,
+and 2x2x2=8 features per 3d item.</p>
+<p>Tuple allows to define several image level features, e.g (2, 3, 4).</p>
+</p></li>
+<li><p><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)"><em>str</em></a>) – a layer name that will be used as a scope.</p></li>
+</ul>
+</dd>
+</dl>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p><a class="reference internal" href="#batchflow.models.tf.layers.pyramid_pooling" title="batchflow.models.tf.layers.pyramid_pooling"><code class="xref py py-func docutils literal notranslate"><span class="pre">pyramid_pooling()</span></code></a></p>
+</div>
+<dl class="field-list simple">
+<dt class="field-odd">Returns</dt>
+<dd class="field-odd"><p></p>
+</dd>
+<dt class="field-even">Return type</dt>
+<dd class="field-even"><p>tf.Tensor</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="batchflow.models.tf.layers.average_pooling">
+<code class="sig-name descname">average_pooling</code><span class="sig-paren">(</span><em class="sig-param">inputs</em>, <em class="sig-param">pool_size</em>, <em class="sig-param">strides</em>, <em class="sig-param">padding='same'</em>, <em class="sig-param">data_format='channels_last'</em>, <em class="sig-param">name=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/batchflow/models/tf/layers/pooling.html#average_pooling"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#batchflow.models.tf.layers.average_pooling" title="Permalink to this definition">¶</a></dt>
+<dd><p>Multi-dimensional average-pooling layer.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>inputs</strong> (<em>tf.Tensor</em>) – input tensor</p></li>
+<li><p><strong>pool_size</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.7)"><em>int</em></a>) – the size of the pooling window</p></li>
+<li><p><strong>strides</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.7)"><em>int</em></a>) – the strides of the pooling operation</p></li>
+<li><p><strong>padding</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)"><em>str</em></a>) – ‘same’ or ‘valid’</p></li>
+<li><p><strong>data_format</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)"><em>str</em></a>) – ‘channels_last’ or ‘channels_first’</p></li>
+<li><p><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)"><em>str</em></a>) – scope name</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>tf.Tensor</p>
+</dd>
+</dl>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p><a class="reference external" href="https://www.tensorflow.org/api_docs/python/tf/layers/average_pooling1d">tf.layers.average_pooling1d</a>,
+<a class="reference external" href="https://www.tensorflow.org/api_docs/python/tf/layers/average_pooling2d">tf.layers.average_pooling2d</a>,
+<a class="reference external" href="https://www.tensorflow.org/api_docs/python/tf/layers/average_pooling3d">tf.layers.average_pooling3d</a></p>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="batchflow.models.tf.layers.conv1d_transpose">
+<code class="sig-name descname">conv1d_transpose</code><span class="sig-paren">(</span><em class="sig-param">inputs</em>, <em class="sig-param">filters</em>, <em class="sig-param">kernel_size</em>, <em class="sig-param">strides=1</em>, <em class="sig-param">padding='valid'</em>, <em class="sig-param">data_format='channels_last'</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/batchflow/models/tf/layers/conv.html#conv1d_transpose"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#batchflow.models.tf.layers.conv1d_transpose" title="Permalink to this definition">¶</a></dt>
+<dd><p>Transposed 1D convolution layer</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>inputs</strong> (<em>tf.Tensor</em>) – input tensor</p></li>
+<li><p><strong>filters</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.7)"><em>int</em></a>) – number of filters in the ouput tensor</p></li>
+<li><p><strong>kernel_size</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.7)"><em>int</em></a>) – kernel size</p></li>
+<li><p><strong>strides</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.7)"><em>int</em></a>) – convolution stride. Default is 1.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>tf.Tensor</p>
+</dd>
+</dl>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p><a class="reference external" href="https://www.tensorflow.org/api_docs/python/tf/layers/conv2d_transpose">tf.layers.conv2d_transpose</a>,
+<a class="reference external" href="https://www.tensorflow.org/api_docs/python/tf/layers/conv3d_transpose">tf.layers.conv3d_transpose</a></p>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="batchflow.models.tf.layers.conv1d_transpose_nn">
+<code class="sig-name descname">conv1d_transpose_nn</code><span class="sig-paren">(</span><em class="sig-param">value</em>, <em class="sig-param">filters</em>, <em class="sig-param">output_shape</em>, <em class="sig-param">strides</em>, <em class="sig-param">padding='SAME'</em>, <em class="sig-param">data_format='NWC'</em>, <em class="sig-param">name=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/batchflow/models/tf/layers/conv.html#conv1d_transpose_nn"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#batchflow.models.tf.layers.conv1d_transpose_nn" title="Permalink to this definition">¶</a></dt>
+<dd><p>Transposed 1D convolution layer. Analogue of the tf.nn.conv2d_transpose.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>value</strong> (<em>tf.Tensor</em>) – input tensor</p></li>
+<li><p><strong>filters</strong> (<em>tf.Tensor</em>) – convolutional filter</p></li>
+<li><p><strong>output_shape</strong> (<em>tf.Tensor</em>) – the output shape of the deconvolution op</p></li>
+<li><p><strong>strides</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#list" title="(in Python v3.7)"><em>list</em></a>) – the stride of the sliding window for each dimension of the input tensor</p></li>
+<li><p><strong>padding</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)"><em>str</em></a>) – ‘VALID’ or ‘SAME’. Default - ‘SAME’.</p></li>
+<li><p><strong>data_format</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)"><em>str</em></a>) – ‘NWC’ or ‘NCW’. Default - ‘NWC’.</p></li>
+<li><p><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)"><em>str</em></a>) – scope name</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>tf.Tensor</p>
+</dd>
+</dl>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p><a class="reference external" href="https://www.tensorflow.org/api_docs/python/tf/nn/conv2d_transpose">tf.nn.conv2d_transpose</a>,
+<a class="reference external" href="https://www.tensorflow.org/api_docs/python/tf/nn/conv3d_transpose">tf.nn.conv3d_transpose</a></p>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="batchflow.models.tf.layers.conv_block">
+<code class="sig-name descname">conv_block</code><span class="sig-paren">(</span><em class="sig-param">inputs</em>, <em class="sig-param">layout=''</em>, <em class="sig-param">filters=0</em>, <em class="sig-param">kernel_size=3</em>, <em class="sig-param">name=None</em>, <em class="sig-param">strides=1</em>, <em class="sig-param">padding='same'</em>, <em class="sig-param">data_format='channels_last'</em>, <em class="sig-param">dilation_rate=1</em>, <em class="sig-param">depth_multiplier=1</em>, <em class="sig-param">activation=&lt;function relu&gt;</em>, <em class="sig-param">pool_size=2</em>, <em class="sig-param">pool_strides=2</em>, <em class="sig-param">dropout_rate=0.0</em>, <em class="sig-param">is_training=True</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/batchflow/models/tf/layers/conv_block.html#conv_block"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#batchflow.models.tf.layers.conv_block" title="Permalink to this definition">¶</a></dt>
+<dd><p>Complex multi-dimensional block with a sequence of convolutions, batch normalization, activation, pooling,
+dropout and even dense layers.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>inputs</strong> (<em>tf.Tensor</em>) – input tensor</p></li>
+<li><p><strong>layout</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)"><em>str</em></a>) – <p>a sequence of operations:</p>
+<ul>
+<li><p>c - convolution</p></li>
+<li><p>t - transposed convolution</p></li>
+<li><p>C - separable convolution</p></li>
+<li><p>T - separable transposed convolution</p></li>
+<li><p>f - dense (fully connected)</p></li>
+<li><p>n - batch normalization</p></li>
+<li><p>a - activation</p></li>
+<li><p>p - pooling (default is max-pooling)</p></li>
+<li><p>v - average pooling</p></li>
+<li><p>P - global pooling (default is max-pooling)</p></li>
+<li><p>V - global average pooling</p></li>
+<li><p>d - dropout</p></li>
+<li><p>D - alpha dropout</p></li>
+<li><p>m - maximum intensity projection (<a class="reference internal" href="#batchflow.models.tf.layers.mip" title="batchflow.models.tf.layers.mip"><code class="xref py py-func docutils literal notranslate"><span class="pre">mip()</span></code></a>)</p></li>
+<li><p>b - upsample with bilinear resize</p></li>
+<li><p>B - upsample with bilinear additive resize</p></li>
+<li><p>N - upsample with nearest neighbors resize</p></li>
+<li><p>X - upsample with subpixel convolution (<a class="reference internal" href="#batchflow.models.tf.layers.subpixel_conv" title="batchflow.models.tf.layers.subpixel_conv"><code class="xref py py-func docutils literal notranslate"><span class="pre">subpixel_conv()</span></code></a>)</p></li>
+<li><p>R - start residual connection</p></li>
+<li><p>A - start residual connection with bilinear additive upsampling</p></li>
+<li><p><cite>+</cite> - end residual connection with summation</p></li>
+<li><p><cite>.</cite> - end residual connection with concatenation</p></li>
+</ul>
+<p>Default is ‘’.</p>
+</p></li>
+<li><p><strong>filters</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.7)"><em>int</em></a>) – the number of filters in the output tensor</p></li>
+<li><p><strong>kernel_size</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.7)"><em>int</em></a>) – kernel size</p></li>
+<li><p><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)"><em>str</em></a>) – name of the layer that will be used as a scope.</p></li>
+<li><p><strong>units</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.7)"><em>int</em></a>) – the number of units in the dense layer</p></li>
+<li><p><strong>strides</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.7)"><em>int</em></a>) – Default is 1.</p></li>
+<li><p><strong>padding</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)"><em>str</em></a>) – padding mode, can be ‘same’ or ‘valid’. Default - ‘same’,</p></li>
+<li><p><strong>data_format</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)"><em>str</em></a>) – ‘channels_last’ or ‘channels_first’. Default - ‘channels_last’.</p></li>
+<li><p><strong>dilation_rate</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.7)"><em>int</em></a>) – Default is 1.</p></li>
+<li><p><strong>activation</strong> (<em>callable</em>) – Default is <cite>tf.nn.relu</cite>.</p></li>
+<li><p><strong>pool_size</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.7)"><em>int</em></a>) – Default is 2.</p></li>
+<li><p><strong>pool_strides</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.7)"><em>int</em></a>) – Default is 2.</p></li>
+<li><p><strong>pool_op</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)"><em>str</em></a>) – pooling operation (‘max’, ‘mean’, ‘frac’)</p></li>
+<li><p><strong>dropout_rate</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.7)"><em>float</em></a>) – Default is 0.</p></li>
+<li><p><strong>factor</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.7)"><em>int</em></a><em> or </em><em>tuple of int</em>) – upsampling factor</p></li>
+<li><p><strong>upsampling_layout</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)"><em>str</em></a>) – layout for upsampling layers</p></li>
+<li><p><strong>is_training</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.7)"><em>bool</em></a><em> or </em><em>tf.Tensor</em>) – Default is True.</p></li>
+<li><p><strong>reuse</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.7)"><em>bool</em></a>) – whether to user layer variables if exist</p></li>
+<li><p><strong>dense</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.7)"><em>dict</em></a>) – parameters for dense layers, like initializers, regularalizers, etc</p></li>
+<li><p><strong>conv</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.7)"><em>dict</em></a>) – parameters for convolution layers, like initializers, regularalizers, etc</p></li>
+<li><p><strong>transposed_conv</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.7)"><em>dict</em></a>) – parameters for transposed conv layers, like initializers, regularalizers, etc</p></li>
+<li><p><strong>batch_norm</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.7)"><em>dict</em></a><em> or </em><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.7)"><em>None</em></a>) – parameters for batch normalization layers, like momentum, intiializers, etc
+If None or inculdes parameters ‘off’ or ‘disable’ set to True or 1,
+the layer will be excluded whatsoever.</p></li>
+<li><p><strong>pooling</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.7)"><em>dict</em></a>) – parameters for pooling layers, like initializers, regularalizers, etc</p></li>
+<li><p><strong>dropout</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.7)"><em>dict</em></a><em> or </em><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.7)"><em>None</em></a>) – parameters for dropout layers, like noise_shape, etc
+If None or inculdes parameters ‘off’ or ‘disable’ set to True or 1,
+the layer will be excluded whatsoever.</p></li>
+<li><p><strong>subpixel_conv</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.7)"><em>dict</em></a><em> or </em><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.7)"><em>None</em></a>) – parameters for subpixel convolution (layout, activation, etc)</p></li>
+<li><p><strong>resize_bilinear</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.7)"><em>dict</em></a><em> or </em><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.7)"><em>None</em></a>) – parameters for bilinear resize</p></li>
+<li><p><strong>resize_bilinear_additive</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#dict" title="(in Python v3.7)"><em>dict</em></a><em> or </em><a class="reference external" href="https://docs.python.org/3/library/constants.html#None" title="(in Python v3.7)"><em>None</em></a>) – parameters for bilinear additive resize (layout, activation, etc)</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p><strong>output tensor</strong></p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>tf.Tensor</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>When <code class="docutils literal notranslate"><span class="pre">layout</span></code> includes several layers of the same type, each one can have its own parameters,
+if corresponding args are passed as lists (not tuples).</p>
+<p>Spaces may be used to improve readability.</p>
+<p class="rubric">Examples</p>
+<p>A simple block: 3x3 conv, batch norm, relu, 2x2 max-pooling with stride 2:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">x</span> <span class="o">=</span> <span class="n">conv_block</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="s1">&#39;cnap&#39;</span><span class="p">,</span> <span class="n">filters</span><span class="o">=</span><span class="mi">32</span><span class="p">,</span> <span class="n">kernel_size</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>A canonical bottleneck block (1x1, 3x3, 1x1 conv with relu in-between):</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">x</span> <span class="o">=</span> <span class="n">conv_block</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="s1">&#39;nac nac nac&#39;</span><span class="p">,</span> <span class="p">[</span><span class="mi">64</span><span class="p">,</span> <span class="mi">64</span><span class="p">,</span> <span class="mi">256</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
+</pre></div>
+</div>
+<p>A complex Nd block:</p>
+<ul class="simple">
+<li><p>5x5 conv with 32 filters</p></li>
+<li><p>relu</p></li>
+<li><p>3x3 conv with 32 filters</p></li>
+<li><p>relu</p></li>
+<li><p>3x3 conv with 64 filters and a spatial stride 2</p></li>
+<li><p>relu</p></li>
+<li><p>batch norm</p></li>
+<li><p>dropout with rate 0.15</p></li>
+</ul>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">x</span> <span class="o">=</span> <span class="n">conv_block</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="s1">&#39;ca ca ca nd&#39;</span><span class="p">,</span> <span class="p">[</span><span class="mi">32</span><span class="p">,</span> <span class="mi">32</span><span class="p">,</span> <span class="mi">64</span><span class="p">],</span> <span class="p">[</span><span class="mi">5</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span> <span class="n">strides</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="n">dropout_rate</span><span class="o">=.</span><span class="mi">15</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>A residual block:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">x</span> <span class="o">=</span> <span class="n">conv_block</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="s1">&#39;R nac nac +&#39;</span><span class="p">,</span> <span class="p">[</span><span class="mi">16</span><span class="p">,</span> <span class="mi">16</span><span class="p">,</span> <span class="mi">64</span><span class="p">],</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">1</span><span class="p">])</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="batchflow.models.tf.layers.conv_transpose">
+<code class="sig-name descname">conv_transpose</code><span class="sig-paren">(</span><em class="sig-param">inputs</em>, <em class="sig-param">filters</em>, <em class="sig-param">kernel_size</em>, <em class="sig-param">strides</em>, <em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/batchflow/models/tf/layers/conv.html#conv_transpose"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#batchflow.models.tf.layers.conv_transpose" title="Permalink to this definition">¶</a></dt>
+<dd><p>Transposed Nd convolution layer</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>inputs</strong> (<em>tf.Tensor</em>) – input tensor</p></li>
+<li><p><strong>filters</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.7)"><em>int</em></a>) – number of filters in the ouput tensor</p></li>
+<li><p><strong>kernel_size</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.7)"><em>int</em></a>) – kernel size</p></li>
+<li><p><strong>strides</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.7)"><em>int</em></a>) – convolution stride. Default is 1.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>tf.Tensor</p>
+</dd>
+</dl>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p><a class="reference internal" href="#batchflow.models.tf.layers.conv1d_transpose" title="batchflow.models.tf.layers.conv1d_transpose"><code class="xref py py-func docutils literal notranslate"><span class="pre">conv1d_transpose()</span></code></a>,
+<a class="reference external" href="https://www.tensorflow.org/api_docs/python/tf/layers/conv2d_transpose">tf.layers.conv2d_transpose</a>,
+<a class="reference external" href="https://www.tensorflow.org/api_docs/python/tf/layers/conv3d_transpose">tf.layers.conv3d_transpose</a></p>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="batchflow.models.tf.layers.depth_to_space">
+<code class="sig-name descname">depth_to_space</code><span class="sig-paren">(</span><em class="sig-param">inputs</em>, <em class="sig-param">block_size</em>, <em class="sig-param">name='d2s'</em>, <em class="sig-param">data_format='channels_last'</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/batchflow/models/tf/layers/resize.html#depth_to_space"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#batchflow.models.tf.layers.depth_to_space" title="Permalink to this definition">¶</a></dt>
+<dd><p>1d, 2d and 3d depth_to_space transformation.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>inputs</strong> (<em>tf.Tensor</em>) – a tensor to resize</p></li>
+<li><p><strong>block_size</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.7)"><em>int</em></a>) – An int that is &gt;= 2. The size of the spatial block</p></li>
+<li><p><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)"><em>str</em></a>) – scope name</p></li>
+<li><p><strong>data_format</strong> (<em>{'channels_last'</em><em>, </em><em>'channels_first'}</em>) – position of the channels dimension</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>tf.Tensor</p>
+</dd>
+</dl>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p><a class="reference external" href="https://www.tensorflow.org/api_docs/python/tf/depth_to_space">tf.depth_to_space</a></p>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="batchflow.models.tf.layers.flatten">
+<code class="sig-name descname">flatten</code><span class="sig-paren">(</span><em class="sig-param">inputs</em>, <em class="sig-param">name=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/batchflow/models/tf/layers/core.html#flatten"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#batchflow.models.tf.layers.flatten" title="Permalink to this definition">¶</a></dt>
+<dd><p>Flatten tensor to two dimensions (batch_size, item_vector_size) using inferred shape and numpy</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="batchflow.models.tf.layers.flatten2d">
+<code class="sig-name descname">flatten2d</code><span class="sig-paren">(</span><em class="sig-param">inputs</em>, <em class="sig-param">name=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/batchflow/models/tf/layers/core.html#flatten2d"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#batchflow.models.tf.layers.flatten2d" title="Permalink to this definition">¶</a></dt>
+<dd><p>Flatten tensor to two dimensions (batch_size, item_vector_size)</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="batchflow.models.tf.layers.fractional_pooling">
+<code class="sig-name descname">fractional_pooling</code><span class="sig-paren">(</span><em class="sig-param">inputs</em>, <em class="sig-param">op</em>, <em class="sig-param">pool_size=1.4142</em>, <em class="sig-param">pseudo_random=False</em>, <em class="sig-param">overlapping=False</em>, <em class="sig-param">data_format='channels_last'</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/batchflow/models/tf/layers/pooling.html#fractional_pooling"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#batchflow.models.tf.layers.fractional_pooling" title="Permalink to this definition">¶</a></dt>
+<dd><p>Fractional max-pooling layer.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>inputs</strong> (<em>tf.Tensor</em>) – input tensor</p></li>
+<li><p><strong>op</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)"><em>str</em></a>) – pooling operation (‘max’, ‘mean’, ‘average’, ‘avg’)</p></li>
+<li><p><strong>pool_size</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.7)"><em>float</em></a>) – pooling ratio (default=1.4142)</p></li>
+<li><p><strong>pseudo_random</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.7)"><em>bool</em></a>) – Default is False</p></li>
+<li><p><strong>overlapping</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.7)"><em>bool</em></a>) – Default is False</p></li>
+<li><p><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)"><em>str</em></a>) – scope name</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>tf.Tensor</p>
+</dd>
+</dl>
+<p class="rubric">Notes</p>
+<p>Be aware that it is not thread safe.
+<code class="docutils literal notranslate"><span class="pre">tf.nn.fractional_max_pool&gt;</span></code> will likely cause segmentation fault in a multi-threading environment
+(e.g. in a pipeline with prefetch)</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="batchflow.models.tf.layers.global_average_pooling">
+<code class="sig-name descname">global_average_pooling</code><span class="sig-paren">(</span><em class="sig-param">inputs</em>, <em class="sig-param">data_format='channels_last'</em>, <em class="sig-param">name=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/batchflow/models/tf/layers/pooling.html#global_average_pooling"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#batchflow.models.tf.layers.global_average_pooling" title="Permalink to this definition">¶</a></dt>
+<dd><p>Multi-dimensional global average-pooling layer.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>inputs</strong> (<em>tf.Tensor</em>) – input tensor</p></li>
+<li><p><strong>data_format</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)"><em>str</em></a>) – ‘channels_last’ or ‘channels_first’</p></li>
+<li><p><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)"><em>str</em></a>) – scope name</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>tf.Tensor</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="batchflow.models.tf.layers.global_max_pooling">
+<code class="sig-name descname">global_max_pooling</code><span class="sig-paren">(</span><em class="sig-param">inputs</em>, <em class="sig-param">data_format='channels_last'</em>, <em class="sig-param">name=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/batchflow/models/tf/layers/pooling.html#global_max_pooling"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#batchflow.models.tf.layers.global_max_pooling" title="Permalink to this definition">¶</a></dt>
+<dd><p>Multi-dimensional global max-pooling layer.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>inputs</strong> (<em>tf.Tensor</em>) – input tensor</p></li>
+<li><p><strong>data_format</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)"><em>str</em></a>) – ‘channels_last’ or ‘channels_first’</p></li>
+<li><p><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)"><em>str</em></a>) – scope name</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>tf.Tensor</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="batchflow.models.tf.layers.global_pooling">
+<code class="sig-name descname">global_pooling</code><span class="sig-paren">(</span><em class="sig-param">inputs</em>, <em class="sig-param">op</em>, <em class="sig-param">data_format='channels_last'</em>, <em class="sig-param">keepdims=False</em>, <em class="sig-param">name=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/batchflow/models/tf/layers/pooling.html#global_pooling"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#batchflow.models.tf.layers.global_pooling" title="Permalink to this definition">¶</a></dt>
+<dd><p>Multi-dimensional global pooling layer.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>inputs</strong> (<em>tf.Tensor</em>) – input tensor</p></li>
+<li><p><strong>op</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)"><em>str</em></a>) – pooling operation (‘max’, ‘mean’, ‘average’, ‘avg’)</p></li>
+<li><p><strong>data_format</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)"><em>str</em></a>) – ‘channels_last’ or ‘channels_first’</p></li>
+<li><p><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)"><em>str</em></a>) – scope name</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>tf.Tensor</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="batchflow.models.tf.layers.max_pooling">
+<code class="sig-name descname">max_pooling</code><span class="sig-paren">(</span><em class="sig-param">inputs</em>, <em class="sig-param">pool_size</em>, <em class="sig-param">strides</em>, <em class="sig-param">padding='same'</em>, <em class="sig-param">data_format='channels_last'</em>, <em class="sig-param">name=None</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/batchflow/models/tf/layers/pooling.html#max_pooling"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#batchflow.models.tf.layers.max_pooling" title="Permalink to this definition">¶</a></dt>
+<dd><p>Multi-dimensional max-pooling layer.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>inputs</strong> (<em>tf.Tensor</em>) – input tensor</p></li>
+<li><p><strong>pool_size</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.7)"><em>int</em></a>) – the size of the pooling window</p></li>
+<li><p><strong>strides</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.7)"><em>int</em></a>) – the strides of the pooling operation</p></li>
+<li><p><strong>padding</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)"><em>str</em></a>) – ‘same’ or ‘valid’</p></li>
+<li><p><strong>data_format</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)"><em>str</em></a>) – ‘channels_last’ or ‘channels_first’</p></li>
+<li><p><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)"><em>str</em></a>) – scope name</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>tf.Tensor</p>
+</dd>
+</dl>
+<div class="admonition seealso">
+<p class="admonition-title">See also</p>
+<p><a class="reference external" href="https://www.tensorflow.org/api_docs/python/tf/layers/max_pooling1d">tf.layers.max_pooling1d</a>,
+<a class="reference external" href="https://www.tensorflow.org/api_docs/python/tf/layers/max_pooling2d">tf.layers.max_pooling2d</a>,
+<a class="reference external" href="https://www.tensorflow.org/api_docs/python/tf/layers/max_pooling3d">tf.layers.max_pooling3d</a></p>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="batchflow.models.tf.layers.maxout">
+<code class="sig-name descname">maxout</code><span class="sig-paren">(</span><em class="sig-param">inputs</em>, <em class="sig-param">depth</em>, <em class="sig-param">axis=-1</em>, <em class="sig-param">name='max'</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/batchflow/models/tf/layers/core.html#maxout"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#batchflow.models.tf.layers.maxout" title="Permalink to this definition">¶</a></dt>
+<dd><p>Shrink last dimension by making max pooling every <code class="docutils literal notranslate"><span class="pre">depth</span></code> channels</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="batchflow.models.tf.layers.mip">
+<code class="sig-name descname">mip</code><span class="sig-paren">(</span><em class="sig-param">inputs</em>, <em class="sig-param">depth</em>, <em class="sig-param">data_format='channels_last'</em>, <em class="sig-param">name='mip'</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/batchflow/models/tf/layers/core.html#mip"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#batchflow.models.tf.layers.mip" title="Permalink to this definition">¶</a></dt>
+<dd><p>Maximum intensity projection by shrinking the channels dimension with max pooling every <code class="docutils literal notranslate"><span class="pre">depth</span></code> channels</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="batchflow.models.tf.layers.non_max_suppression">
+<code class="sig-name descname">non_max_suppression</code><span class="sig-paren">(</span><em class="sig-param">inputs</em>, <em class="sig-param">scores</em>, <em class="sig-param">batch_size</em>, <em class="sig-param">max_output_size</em>, <em class="sig-param">score_threshold=0.7</em>, <em class="sig-param">iou_threshold=0.7</em>, <em class="sig-param">nonempty=False</em>, <em class="sig-param">name='nms'</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/batchflow/models/tf/layers/roi.html#non_max_suppression"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#batchflow.models.tf.layers.non_max_suppression" title="Permalink to this definition">¶</a></dt>
+<dd><p>Perform NMS on batch of images.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>inputs</strong> (<em>tf.Tuple</em>) – each components is a set of bboxes for corresponding image</p></li>
+<li><p><strong>scores</strong> (<em>tf.Tuple</em>) – scores of inputs</p></li>
+<li><p><strong>batch_size</strong> – size of batch of inputs</p></li>
+<li><p><strong>max_output_size</strong> – maximal size of bboxes per image</p></li>
+<li><p><strong>score_threshold</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.7)"><em>float</em></a>) – bboxes with score less the score_threshold will be dropped</p></li>
+<li><p><strong>iou_threshold</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.7)"><em>float</em></a>) – bboxes with iou which is greater then iou_threshold will be merged</p></li>
+<li><p><strong>nonempty</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#bool" title="(in Python v3.7)"><em>bool</em></a>) – if True at least one bbox per image will be returned</p></li>
+<li><p><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)"><em>str</em></a>) – scope name</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>indices of selected bboxes for each image</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>tf.Tuple</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="batchflow.models.tf.layers.pooling">
+<code class="sig-name descname">pooling</code><span class="sig-paren">(</span><em class="sig-param">inputs</em>, <em class="sig-param">op</em>, <em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/batchflow/models/tf/layers/pooling.html#pooling"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#batchflow.models.tf.layers.pooling" title="Permalink to this definition">¶</a></dt>
+<dd><p>Multi-dimensional pooling layer.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>inputs</strong> (<em>tf.Tensor</em>) – input tensor</p></li>
+<li><p><strong>op</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)"><em>str</em></a>) – pooling operation (‘max’, ‘mean’, ‘average’, ‘avg’)</p></li>
+<li><p><strong>pool_size</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.7)"><em>int</em></a>) – the size of the pooling window</p></li>
+<li><p><strong>strides</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.7)"><em>int</em></a>) – the strides of the pooling operation</p></li>
+<li><p><strong>padding</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)"><em>str</em></a>) – ‘same’ or ‘valid’</p></li>
+<li><p><strong>data_format</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)"><em>str</em></a>) – ‘channels_last’ or ‘channels_first’</p></li>
+<li><p><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)"><em>str</em></a>) – scope name</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>tf.Tensor</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="batchflow.models.tf.layers.pyramid_pooling">
+<code class="sig-name descname">pyramid_pooling</code><span class="sig-paren">(</span><em class="sig-param">inputs</em>, <em class="sig-param">layout='cna'</em>, <em class="sig-param">filters=None</em>, <em class="sig-param">kernel_size=1</em>, <em class="sig-param">pool_op='mean'</em>, <em class="sig-param">pyramid=(0</em>, <em class="sig-param">1</em>, <em class="sig-param">2</em>, <em class="sig-param">3</em>, <em class="sig-param">6)</em>, <em class="sig-param">name='psp'</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/batchflow/models/tf/layers/pyramid.html#pyramid_pooling"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#batchflow.models.tf.layers.pyramid_pooling" title="Permalink to this definition">¶</a></dt>
+<dd><p>Pyramid Pooling module</p>
+<p>Zhao H. et al. “<a class="reference external" href="https://arxiv.org/abs/1612.01105">Pyramid Scene Parsing Network</a>”</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>inputs</strong> (<em>tf.Tensor</em>) – input tensor</p></li>
+<li><p><strong>layout</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)"><em>str</em></a>) – layout for convolution layers</p></li>
+<li><p><strong>filters</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.7)"><em>int</em></a>) – the number of filters in each pyramid branch</p></li>
+<li><p><strong>kernel_size</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.7)"><em>int</em></a>) – kernel size</p></li>
+<li><p><strong>pool_op</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)"><em>str</em></a>) – a pooling operation (‘mean’ or ‘max’)</p></li>
+<li><p><strong>pyramid</strong> (<em>tuple of int</em>) – <p>the number of feature regions in each dimension, default is (0, 1, 2, 3, 6).</p>
+<p><cite>0</cite> is used to include <cite>inputs</cite> into the output tensor.</p>
+</p></li>
+<li><p><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)"><em>str</em></a>) – a layer name that will be used as a scope.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>tf.Tensor</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="batchflow.models.tf.layers.resize_bilinear">
+<code class="sig-name descname">resize_bilinear</code><span class="sig-paren">(</span><em class="sig-param">inputs</em>, <em class="sig-param">factor=2</em>, <em class="sig-param">shape=None</em>, <em class="sig-param">name='resize'</em>, <em class="sig-param">data_format='channels_last'</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/batchflow/models/tf/layers/resize.html#resize_bilinear"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#batchflow.models.tf.layers.resize_bilinear" title="Permalink to this definition">¶</a></dt>
+<dd><p>Resize input tensor with bilinear method</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>inputs</strong> (<em>tf.Tensor</em>) – a tensor to resize</p></li>
+<li><p><strong>factor</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#float" title="(in Python v3.7)"><em>float</em></a>) – upsampling factor (not used if shape is specified)</p></li>
+<li><p><strong>shape</strong> (<em>tuple of int</em>) – a shape to upsample to</p></li>
+<li><p><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)"><em>str</em></a>) – scope name</p></li>
+<li><p><strong>data_format</strong> (<em>{'channels_last'</em><em>, </em><em>'channels_first'}</em>) – position of the channels dimension</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>tf.Tensor</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="batchflow.models.tf.layers.resize_bilinear_additive">
+<code class="sig-name descname">resize_bilinear_additive</code><span class="sig-paren">(</span><em class="sig-param">inputs</em>, <em class="sig-param">factor=2</em>, <em class="sig-param">name='bilinear_additive'</em>, <em class="sig-param">data_format='channels_last'</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/batchflow/models/tf/layers/resize.html#resize_bilinear_additive"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#batchflow.models.tf.layers.resize_bilinear_additive" title="Permalink to this definition">¶</a></dt>
+<dd><p>Resize input tensor with bilinear additive technique</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>inputs</strong> (<em>tf.Tensor</em>) – a tensor to resize</p></li>
+<li><p><strong>factor</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.7)"><em>int</em></a>) – upsampling factor</p></li>
+<li><p><strong>layout</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)"><em>str</em></a>) – layers applied between bilinear resize and xip</p></li>
+<li><p><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)"><em>str</em></a>) – scope name</p></li>
+<li><p><strong>data_format</strong> (<em>{'channels_last'</em><em>, </em><em>'channels_first'}</em>) – position of the channels dimension</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>tf.Tensor</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="batchflow.models.tf.layers.resize_nn">
+<code class="sig-name descname">resize_nn</code><span class="sig-paren">(</span><em class="sig-param">inputs</em>, <em class="sig-param">factor=2</em>, <em class="sig-param">shape=None</em>, <em class="sig-param">name=None</em>, <em class="sig-param">data_format='channels_last'</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/batchflow/models/tf/layers/resize.html#resize_nn"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#batchflow.models.tf.layers.resize_nn" title="Permalink to this definition">¶</a></dt>
+<dd><p>Resize input tensor with nearest neighbors method</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>inputs</strong> (<em>tf.Tensor</em>) – a tensor to resize</p></li>
+<li><p><strong>factor</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.7)"><em>int</em></a>) – upsampling factor (not used if shape is specified)</p></li>
+<li><p><strong>shape</strong> (<em>tuple of int</em>) – a shape to upsample to</p></li>
+<li><p><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)"><em>str</em></a>) – scope name</p></li>
+<li><p><strong>data_format</strong> (<em>{'channels_last'</em><em>, </em><em>'channels_first'}</em>) – position of the channels dimension</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>tf.Tensor</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="batchflow.models.tf.layers.roi_pooling_layer">
+<code class="sig-name descname">roi_pooling_layer</code><span class="sig-paren">(</span><em class="sig-param">inputs</em>, <em class="sig-param">rois</em>, <em class="sig-param">factor=(1</em>, <em class="sig-param">1)</em>, <em class="sig-param">shape=(7</em>, <em class="sig-param">7)</em>, <em class="sig-param">data_format='channels_last'</em>, <em class="sig-param">name='roi-pooling'</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/batchflow/models/tf/layers/roi.html#roi_pooling_layer"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#batchflow.models.tf.layers.roi_pooling_layer" title="Permalink to this definition">¶</a></dt>
+<dd><p>ROI pooling layer with resize instead max-pool.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>inputs</strong> (<em>tf.Tensor</em>) – input tensor</p></li>
+<li><p><strong>rois</strong> (<em>tf.Tuple</em>) – coordinates of bboxes for each image</p></li>
+<li><p><strong>factor</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.7)"><em>tuple</em></a>) – factor to transform coordinates of bboxes</p></li>
+<li><p><strong>shape</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#tuple" title="(in Python v3.7)"><em>tuple</em></a>) – resize to</p></li>
+<li><p><strong>data_format</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)"><em>str</em></a><em>, </em><em>'channels_last'</em><em> or </em><em>'channels_first'</em>) – </p></li>
+<li><p><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)"><em>str</em></a>) – scope name</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p>cropped regions</p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>tf.Tuple</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="batchflow.models.tf.layers.separable_conv">
+<code class="sig-name descname">separable_conv</code><span class="sig-paren">(</span><em class="sig-param">inputs</em>, <em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/batchflow/models/tf/layers/conv.html#separable_conv"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#batchflow.models.tf.layers.separable_conv" title="Permalink to this definition">¶</a></dt>
+<dd><p>Make Nd depthwise convolutions that acts separately on channels,
+followed by a pointwise convolution that mixes channels.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>inputs</strong> (<em>tf.Tensor</em>) – input tensor</p></li>
+<li><p><strong>filters</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.7)"><em>int</em></a>) – number of filters in the ouput tensor</p></li>
+<li><p><strong>kernel_size</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.7)"><em>int</em></a>) – kernel size</p></li>
+<li><p><strong>strides</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.7)"><em>int</em></a>) – convolution stride. Default is 1.</p></li>
+<li><p><strong>padding</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)"><em>str</em></a>) – padding mode, can be ‘same’ or ‘valid’. Default - ‘same’,</p></li>
+<li><p><strong>data_format</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)"><em>str</em></a>) – ‘channels_last’ or ‘channels_first’. Default - ‘channels_last’.</p></li>
+<li><p><strong>dilation_rate</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.7)"><em>int</em></a>) – Default is 1.</p></li>
+<li><p><strong>depth_multiplier</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.7)"><em>int</em></a>) – The number of depthwise convolution output channels for each input channel.
+The total number of depthwise convolution output channels will be equal to
+<code class="docutils literal notranslate"><span class="pre">num_filters_in</span></code> * <code class="docutils literal notranslate"><span class="pre">depth_multiplier</span></code>. Default - 1.</p></li>
+<li><p><strong>activation</strong> (<em>callable</em>) – Default is <cite>tf.nn.relu</cite>.</p></li>
+<li><p><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)"><em>str</em></a>) – The name of the layer. Default - None.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>tf.Tensor</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="batchflow.models.tf.layers.separable_conv_transpose">
+<code class="sig-name descname">separable_conv_transpose</code><span class="sig-paren">(</span><em class="sig-param">inputs</em>, <em class="sig-param">*args</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/batchflow/models/tf/layers/conv.html#separable_conv_transpose"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#batchflow.models.tf.layers.separable_conv_transpose" title="Permalink to this definition">¶</a></dt>
+<dd><p>Make Nd depthwise transpose convolutions that acts separately on channels,
+followed by a pointwise convolution that mixes channels.</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>inputs</strong> (<em>tf.Tensor</em>) – input tensor</p></li>
+<li><p><strong>filters</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.7)"><em>int</em></a>) – number of filters in the ouput tensor</p></li>
+<li><p><strong>kernel_size</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.7)"><em>int</em></a>) – kernel size</p></li>
+<li><p><strong>strides</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.7)"><em>int</em></a>) – convolution stride. Default is 1.</p></li>
+<li><p><strong>padding</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)"><em>str</em></a>) – padding mode, can be ‘same’ or ‘valid’. Default - ‘same’.</p></li>
+<li><p><strong>data_format</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)"><em>str</em></a>) – ‘channels_last’ or ‘channels_first’. Default - ‘channels_last’.</p></li>
+<li><p><strong>depth_multiplier</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.7)"><em>int</em></a>) – The number of depthwise convolution output channels for each input channel.
+The total number of depthwise convolution output channels will be equal to
+<code class="docutils literal notranslate"><span class="pre">num_filters_in</span></code> * <code class="docutils literal notranslate"><span class="pre">depth_multiplier</span></code>. Deafault - 1.</p></li>
+<li><p><strong>activation</strong> (<em>callable</em>) – Default is <cite>tf.nn.relu</cite>.</p></li>
+<li><p><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)"><em>str</em></a>) – The name of the layer. Default - None.</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>tf.Tensor</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="batchflow.models.tf.layers.subpixel_conv">
+<code class="sig-name descname">subpixel_conv</code><span class="sig-paren">(</span><em class="sig-param">inputs</em>, <em class="sig-param">factor=2</em>, <em class="sig-param">name='subpixel'</em>, <em class="sig-param">data_format='channels_last'</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/batchflow/models/tf/layers/resize.html#subpixel_conv"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#batchflow.models.tf.layers.subpixel_conv" title="Permalink to this definition">¶</a></dt>
+<dd><p>Resize input tensor with subpixel convolution (depth to space operation)</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>inputs</strong> (<em>tf.Tensor</em>) – a tensor to resize</p></li>
+<li><p><strong>factor</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.7)"><em>int</em></a>) – upsampling factor</p></li>
+<li><p><strong>layout</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)"><em>str</em></a>) – layers applied before depth-to-space transform</p></li>
+<li><p><strong>name</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)"><em>str</em></a>) – scope name</p></li>
+<li><p><strong>data_format</strong> (<em>{'channels_last'</em><em>, </em><em>'channels_first'}</em>) – position of the channels dimension</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>tf.Tensor</p>
+</dd>
+</dl>
+</dd></dl>
+
+<dl class="function">
+<dt id="batchflow.models.tf.layers.upsample">
+<code class="sig-name descname">upsample</code><span class="sig-paren">(</span><em class="sig-param">inputs</em>, <em class="sig-param">factor=None</em>, <em class="sig-param">shape=None</em>, <em class="sig-param">layout='b'</em>, <em class="sig-param">name='upsample'</em>, <em class="sig-param">**kwargs</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/batchflow/models/tf/layers/conv_block.html#upsample"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#batchflow.models.tf.layers.upsample" title="Permalink to this definition">¶</a></dt>
+<dd><p>Upsample inputs with a given factor</p>
+<dl class="field-list simple">
+<dt class="field-odd">Parameters</dt>
+<dd class="field-odd"><ul class="simple">
+<li><p><strong>inputs</strong> (<em>tf.Tensor</em>) – a tensor to resize</p></li>
+<li><p><strong>factor</strong> (<a class="reference external" href="https://docs.python.org/3/library/functions.html#int" title="(in Python v3.7)"><em>int</em></a>) – an upsamping scale</p></li>
+<li><p><strong>shape</strong> (<em>tuple of int</em>) – a shape to upsample to (used by bilinear and NN resize)</p></li>
+<li><p><strong>layout</strong> (<a class="reference external" href="https://docs.python.org/3/library/stdtypes.html#str" title="(in Python v3.7)"><em>str</em></a>) – <p>resizing technique, a sequence of:</p>
+<ul>
+<li><p>A - use residual connection with bilinear additive upsampling</p></li>
+<li><p>b - bilinear resize</p></li>
+<li><p>B - bilinear additive upsampling</p></li>
+<li><p>N - nearest neighbor resize</p></li>
+<li><p>t - transposed convolution</p></li>
+<li><p>T - separable transposed convolution</p></li>
+<li><p>X - subpixel convolution</p></li>
+</ul>
+<p>all other <a class="reference internal" href="#batchflow.models.tf.layers.conv_block" title="batchflow.models.tf.layers.conv_block"><code class="xref py py-func docutils literal notranslate"><span class="pre">conv_block()</span></code></a> layers are also allowed.</p>
+</p></li>
+</ul>
+</dd>
+<dt class="field-even">Returns</dt>
+<dd class="field-even"><p></p>
+</dd>
+<dt class="field-odd">Return type</dt>
+<dd class="field-odd"><p>tf.Tensor</p>
+</dd>
+</dl>
+<p class="rubric">Examples</p>
+<p>A simple bilinear upsampling:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">x</span> <span class="o">=</span> <span class="n">upsample</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="mi">256</span><span class="p">,</span> <span class="mi">256</span><span class="p">),</span> <span class="n">layout</span><span class="o">=</span><span class="s1">&#39;b&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Upsampling with non-linear normalized transposed convolution:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">x</span> <span class="o">=</span> <span class="n">upsample</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">factor</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">layout</span><span class="o">=</span><span class="s1">&#39;nat&#39;</span><span class="p">,</span> <span class="n">kernel_size</span><span class="o">=</span><span class="mi">3</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Subpixel convolution with a residual bilinear additive connection:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">x</span> <span class="o">=</span> <span class="n">upsample</span><span class="p">(</span><span class="n">inputs</span><span class="p">,</span> <span class="n">factor</span><span class="o">=</span><span class="mi">2</span><span class="p">,</span> <span class="n">layout</span><span class="o">=</span><span class="s1">&#39;AX+&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+</dd></dl>
+
+<dl class="function">
+<dt id="batchflow.models.tf.layers.xip">
+<code class="sig-name descname">xip</code><span class="sig-paren">(</span><em class="sig-param">inputs</em>, <em class="sig-param">depth</em>, <em class="sig-param">reduction='max'</em>, <em class="sig-param">data_format='channels_last'</em>, <em class="sig-param">name='xip'</em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/batchflow/models/tf/layers/core.html#xip"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#batchflow.models.tf.layers.xip" title="Permalink to this definition">¶</a></dt>
+<dd><p>Shrink the channels dimension with reduce <code class="docutils literal notranslate"><span class="pre">op</span></code> every <code class="docutils literal notranslate"><span class="pre">depth</span></code> channels</p>
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related" role="navigation" aria-label="related navigation">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../genindex.html" title="General Index"
+             >index</a></li>
+        <li class="right" >
+          <a href="../py-modindex.html" title="Python Module Index"
+             >modules</a> |</li>
+        <li class="right" >
+          <a href="batchflow.models.tf.losses.html" title="batchflow.models.tf.losses"
+             >next</a> |</li>
+        <li class="right" >
+          <a href="batchflow.models.tf.html" title="batchflow.models.tf"
+             >previous</a> |</li>
+        <li class="nav-item nav-item-0"><a href="../index.html">BatchFlow 0.3.0 documentation</a> &#187;</li>
+          <li class="nav-item nav-item-1"><a href="batchflow.html" >API</a> &#187;</li>
+          <li class="nav-item nav-item-2"><a href="batchflow.models.html" >batchflow.models</a> &#187;</li>
+          <li class="nav-item nav-item-3"><a href="batchflow.models.tf.html" >batchflow.models.tf</a> &#187;</li> 
+      </ul>
+    </div>
+    <div class="footer" role="contentinfo">
+        &#169; Copyright 2017, Analysis Center.
+      Created using <a href="http://sphinx-doc.org/">Sphinx</a> 2.1.0.
+    </div>
+  </body>
+</html>
