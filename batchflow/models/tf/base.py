@@ -294,12 +294,12 @@ class TFModel(BaseModel):
 
                 if self.session is None:
                     self.create_session(config)
-                    self.reset()
 
                 if self.train_steps is None:
                     self._make_train_steps(config)
                 else:
                     self.store_to_attr('train_steps', self.train_steps)
+                self.reset()
 
     def create_session(self, config=None):
         """ Create TF session """
